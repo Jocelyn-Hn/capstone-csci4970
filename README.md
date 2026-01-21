@@ -5,6 +5,6 @@ This document will be updated as the project progresses.
 
 # Group Members
 Jocelyn Horn<br/>
-JoseF Stanek<br/>
+Josef Stanek<br/>
 Kurtis Kathol<br/>
 AnhPhat Nguyen<br/>
