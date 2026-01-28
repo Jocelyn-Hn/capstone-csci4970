@@ -7,4 +7,3 @@ This document will be updated as the project progresses.
 Jocelyn Horn<br/>
 Josef Stanek<br/>
 Kurtis Kathol<br/>
-AnhPhat Nguyen<br/>
