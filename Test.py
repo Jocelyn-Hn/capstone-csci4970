@@ -2,7 +2,8 @@ import cv2 as cv
 import numpy as np  
 
 
-
+MAXHEIGHT = 1200
+MAXWIDTH = 800
 #Prompt the user and to choose a detection method
 print("Please select a detection method: ")
 print("1. Sobel\n2. Laplacian\n3. Canny")
@@ -12,7 +13,9 @@ methodChoice = int(input("Enter choice [1,2,3]: "))
 
 if methodChoice == 1:
     #load our given image, this one is just loaded via the folder itself
-    image = cv.imread("CVEDImage1.png", cv.IMREAD_GRAYSCALE)
+    #image = cv.imread("CVEDImage1.png", cv.IMREAD_GRAYSCALE)
+    image = cv.imread("docImg1.jpg", cv.IMREAD_GRAYSCALE)
+
 
     #Apply our edge detection operations
 
