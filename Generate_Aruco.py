@@ -7,7 +7,7 @@ def generate_markers():
     aruco_dictionary = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
 
     #Create only 2 markers (should only need the two for the windows max)
-    for marker_id in range(2):
+    for marker_id in range(3):
         
         #Define marker size, 200 pixels should be enough
         marker_size = 200

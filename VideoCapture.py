@@ -6,9 +6,11 @@ def RunCamera():
     #Create our camera object, we pass in either 0 (the default camera) or a path to a specific camera
     camera = cv.VideoCapture(0)
 
+    # if not camera.isOpened():
+    #     exit()
+
     #Obtain the cameras width and height
-    frame_width = camera.get(cv.CAP_PROP_FRAME_WIDTH)
-    frame_height = camera.get(cv.CAP_PROP_FRAME_HEIGHT)
+
 
     # #UNCOMMENT TO RECORD VIDEO
     # #Encode video and define a videowriter
@@ -27,6 +29,7 @@ def RunCamera():
         #Display the frame
         cv.imshow("Camera", frame)
 
+        #PROCESSING GOES HERE 
         #We should be able to do any processing here, aruco markers, measuring, ect ect..
 
         #Wait for the user to press the esc key to close the program
