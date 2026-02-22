@@ -69,13 +69,11 @@ def main():
                 else:
                     pA, pB, pC = points_3d[0], points_3d[2], points_3d[1]
 
-                triangle_area = triangle_area_3d(pA, pB, pC)
-                window_area_m2 = 2 * triangle_area
-                window_area_in2 = window_area_m2 * M2_TO_IN2
+
 
                 cv.putText(
                     frame,
-                    f"Window Area: {window_area_in2:.1f} in^2",
+                    f"Window Area: {pA:.2f} X {pB:.2f} in^2",
                     (20, 40),
                     cv.FONT_HERSHEY_SIMPLEX,
                     1,
