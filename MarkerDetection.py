@@ -69,17 +69,31 @@ def main():
                 else:
                     pA, pB, pC = points_3d[0], points_3d[2], points_3d[1]
 
+                side1_m = np.linalg.norm(pC - pA)
+                side2_m = np.linalg.norm(pC - pB)
 
+                # Convert to inches
+                side1_in = side1_m * 39.3701
+                side2_in = side2_m * 39.3701
 
                 cv.putText(
                     frame,
-                    f"Window Area: {pA:.2f} X {pB:.2f} in^2",
+                    f"Width: {side1_in:.2f} in",
                     (20, 40),
                     cv.FONT_HERSHEY_SIMPLEX,
-                    1,
+                    0.9,
                     (0, 255, 0),
                     2
                 )
+
+                cv.putText(
+                    frame,
+                    f"Height: {side2_in:.2f} in",
+                    (20, 80),
+                    cv.FONT_HERSHEY_SIMPLEX,
+                    0.9,
+                    (0, 255, 0),
+                    2)
 
         cv.imshow("Markers", frame)
 
