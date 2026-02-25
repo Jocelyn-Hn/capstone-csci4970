@@ -1,9 +1,19 @@
-# Capstone CSCI4970
-A software project demonstrating the novel solution to a problem related to Computer Science. Project content to be determined.
+# Painless Prep Application
+Description: Painless Prep is an application being developed to help reduce the time and energy investment needed for painters during the process of measuring windows so that they can be properly covered during the painting process. 
 
-This document will be updated as the project progresses.
+Planned features: 
+    - Ability to quickly scan windows via AruCo markers using OpenCV to estimate proper window dimensions
+    - Ability to group windows together as "rooms" that allow for neat and orderly processing from a third party
 
 # Group Members
 Jocelyn Horn<br/>
 Josef Stanek<br/>
 Kurtis Kathol<br/>
+
+# Release notes
+    - V 1.0.0-Alpha
+        - Added "Generate_Aruco.py", an AruCo generation script that allows for easy creation of AruCo markers 
+        - Added "MarkerDetection.py", the main script that detects, and roughly estimates the distance between AruCo markers
+        - Added "calibrate_camera.py", a camera calibration script that allows for more accurate distance estimation.
+        - Removed Test.py, TestVideo.py, VideoCapture.py, as those files were generic tests that provided no use to the release
+        
