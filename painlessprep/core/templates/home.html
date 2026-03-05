@@ -1,7 +1,32 @@
 <!DOCTYPE html>
 <html>
-<head><title>Home</title></head>
+<head>
+    <title>Run Script</title>
+</head>
 <body>
-  <h1>Hello..!</h1>
+
+    <h1>Script Runner</h1>
+
+    <!-- Form posts to the same URL, triggering the view -->
+    <form method="POST" action="{% url 'run_calibration' %}">
+        {% csrf_token %}
+        <button type="submit">▶ Run Calibration Script</button>
+    </form>
+    <form method="POST" action="{% url 'run_detection' %}">
+        {% csrf_token %}
+        <button type="submit">▶ Run Detection Script</button>
+    </form>
+
+    <!-- Show output after script runs -->
+    {% if output %}
+        <h3>Output:</h3>
+        <pre>{{ output }}</pre>
+    {% endif %}
+
+    {% if error %}
+        <h3>Error:</h3>
+        <pre style="color: red;">{{ error }}</pre>
+    {% endif %}
+
 </body>
 </html>

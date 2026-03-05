@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+{% if error %}
+    <h3>Error:</h3>
+    <pre style="color: red;">{{ error }}</pre>
+{% endif %}
+
+{% if output %}
+    <h3>Output:</h3>
+    <pre>{{ output }}</pre>
+{% endif %}
+
+<!-- Debug info -->
+<p style="color: grey; font-size: 12px;">
+    Method: {{ request.method }}
+</p>
+
+</body>
+</html>
