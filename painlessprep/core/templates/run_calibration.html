@@ -1,25 +1,35 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+    </head>
+    <body>
 
-{% if error %}
-    <h3>Error:</h3>
-    <pre style="color: red;">{{ error }}</pre>
-{% endif %}
+    {% if error %}
+        <h3>Error:</h3>
+        <pre style="color: red;">{{ error }}</pre>
+    {% endif %}
 
-{% if output %}
-    <h3>Output:</h3>
-    <pre>{{ output }}</pre>
-{% endif %}
+    {% if output %}
+        <h3>Output:</h3>
+        <pre>{{ output }}</pre>
+    {% endif %}
 
-<!-- Debug info -->
-<p style="color: grey; font-size: 12px;">
-    Method: {{ request.method }}
-</p>
+    <!-- Debug info -->
+    <p style="color: grey; font-size: 12px;">
+        Method: {{ request.method }}
+    </p>
 
-</body>
+
+    <canvas id="canvas" width="640" height="480"></canvas>
+    
+    
+
+    <!-- <video id="cameraStream" width="640" height="480" autoplay playsinline></video> -->
+
+    </body>
 </html>
+
+<script src="{% static 'painlessprep/accessCamera.js' %}"></script>

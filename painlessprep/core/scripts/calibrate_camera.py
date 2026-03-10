@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 import glob
+import time
 
 # -------- SETTINGS --------
 CHESSBOARD_SIZE = (5, 7)   # inner corners
@@ -19,34 +20,55 @@ objpoints = []  # 3D real-world points
 imgpoints = []  # 2D image points
 
 camera = cv.VideoCapture(0)
+frameLimit = 20                 #frame counter to limit fps
+frameFrequency = 1/frameLimit   #how often the program should grab a frame (in seconds)
+lastFrameTime = 0               #how long ago the last frame was grabbed
 
+
+# ----- METHODS -----
+def checkFrameGrab():
+    global lastFrameTime
+    currentTime = time.time()
+    if currentTime - lastFrameTime >= frameFrequency:
+        lastFrameTime = currentTime
+        return True
+    return False
+
+
+
+
+# ----- MAIN -----
 print("Press SPACE to capture calibration frame")
 print("Press ESC to finish calibration")
 
 while True:
-    ret, frame = camera.read()
-    if not ret:
-        break
 
-    gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-    found, corners = cv.findChessboardCorners(gray, CHESSBOARD_SIZE, None)
+    if checkFrameGrab():
+        
+        ret, frame = camera.read()
+        if not ret:
+            break
 
-    if found:
-        corners2 = cv.cornerSubPix(
-            gray, corners, (11, 11), (-1, -1), criteria
-        )
-        cv.drawChessboardCorners(frame, CHESSBOARD_SIZE, corners2, found)
+        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        found, corners = cv.findChessboardCorners(gray, CHESSBOARD_SIZE, None)
 
-    cv.imshow("Calibration", frame)
-    key = cv.waitKey(1)
+        if found:
+            corners2 = cv.cornerSubPix(
+                gray, corners, (11, 11), (-1, -1), criteria
+            )
+            cv.drawChessboardCorners(frame, CHESSBOARD_SIZE, corners2, found)
 
-    if key == 32 and found:  # SPACE
-        objpoints.append(objp)
-        imgpoints.append(corners2)
-        print(f"Captured frame {len(objpoints)}")
+        cv.imshow("Calibration", frame)
+        key = cv.waitKey(1)
 
-    elif key == 27:  # ESC
-        break
+        if key == 32 and found:  # SPACE
+            objpoints.append(objp)
+            imgpoints.append(corners2)
+            print(f"Captured frame {len(objpoints)}")
+
+        elif key == 27:  # ESC
+            break
+    
 
 camera.release()
 cv.destroyAllWindows()

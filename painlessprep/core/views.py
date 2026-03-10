@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 
 from django.shortcuts import render
 import subprocess
+import sys
 
 
 def home(request):
@@ -16,32 +17,34 @@ def home(request):
     }
     return render(request, 'home.html', context)
 
-
 def run_calibration(request):
-    output = None
-    error = None
+    return render(request, 'run_calibration.html')
 
-    if request.method == 'POST':
-        script_path = os.path.join(settings.BASE_DIR, 'core', 'scripts', 'calibrate_camera.py')
+# def run_calibration(request):
+#     output = None
+#     error = None
 
-        try:
-            result = subprocess.run(
-                ['python3', script_path],
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
-            output = result.stdout or "Script ran but produced no output."
-            error = result.stderr if result.returncode != 0 else None
+#     if request.method == 'POST':
+#         script_path = os.path.join(settings.BASE_DIR, 'core', 'scripts', 'calibrate_camera.py')
 
-        except subprocess.TimeoutExpired:
-            error = "Script timed out."
-        except FileNotFoundError:
-            error = f"Script not found at: {script_path}"
-        except Exception as e:
-            error = str(e)
+#         try:
+#             result = subprocess.run(
+#                 [sys.executable, script_path],
+#                 capture_output=True,
+#                 text=True,
+#                 timeout=30
+#             )
+#             output = result.stdout or "Script ran but produced no output."
+#             error = result.stderr if result.returncode != 0 else None
 
-    return render(request, 'run_calibration.html', {'output': output, 'error': error})
+#         except subprocess.TimeoutExpired:
+#             error = "Script timed out."
+#         except FileNotFoundError:
+#             error = f"Script not found at: {script_path}"
+#         except Exception as e:
+#             error = str(e)
+
+#     return render(request, 'run_calibration.html', {'output': output, 'error': error})
 
 def run_detection(request):
     output = None
