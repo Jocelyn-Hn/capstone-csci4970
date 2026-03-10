@@ -22,12 +22,15 @@
         Method: {{ request.method }}
     </p>
 
-
-    <canvas id="canvas" width="640" height="480"></canvas>
     
     
-
-    <!-- <video id="cameraStream" width="640" height="480" autoplay playsinline></video> -->
+    <div id="videoBlock" name="videoBlock">
+        <video id="cameraStream" width="640" height="480" autoplay playsinline></video>
+        <button type="button" onclick="beginCapture()">Begin Capture</button>
+        <button type="button" onclick="stopCapture()">Stop Capture</button>
+    </div>
+    
+    <canvas id="canvas" ></canvas>
 
     </body>
 </html>
