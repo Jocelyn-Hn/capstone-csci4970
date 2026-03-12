@@ -17,8 +17,7 @@ objp *= SQUARE_SIZE
 
 objpoints = []  # 3D real-world points
 imgpoints = []  # 2D image points
-
-camera = cv.VideoCapture(0)
+camera = cv.VideoCapture(0, cv.CAP_DSHOW)
 
 print("Press SPACE to capture calibration frame")
 print("Press ESC to finish calibration")

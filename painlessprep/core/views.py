@@ -29,8 +29,7 @@ def run_calibration(request):
             result = subprocess.run(
                 ["python3", script_path],
                 capture_output=True,
-                text=True,
-                timeout=30
+                text=True
             )
             output = result.stdout or "Script ran but produced no output."
             error = result.stderr if result.returncode != 0 else None

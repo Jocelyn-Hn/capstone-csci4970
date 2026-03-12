@@ -16,7 +16,7 @@ def triangle_area_3d(p1, p2, p3):
     return 0.5 * np.linalg.norm(np.cross(p2 - p1, p3 - p1))
 
 def main():
-    camera = cv.VideoCapture(0)
+    camera = cv.VideoCapture(0, cv.CAP_DSHOW)
 
     aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
     parameters = aruco.DetectorParameters()
