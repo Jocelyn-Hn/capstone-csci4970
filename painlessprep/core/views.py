@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 
 
+
 from django.shortcuts import render
 import subprocess
 
@@ -26,7 +27,7 @@ def run_calibration(request):
 
         try:
             result = subprocess.run(
-                ['python3', script_path],
+                ["python3", script_path],
                 capture_output=True,
                 text=True,
                 timeout=30
@@ -52,7 +53,7 @@ def run_detection(request):
 
         try:
             result = subprocess.run(
-                ['python3', script_path],
+                ["python3", script_path],
                 capture_output=True,
                 text=True,
                 timeout=30

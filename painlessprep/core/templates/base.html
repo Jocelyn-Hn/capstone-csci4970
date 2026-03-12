@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--Base.html will allow us to easily throw together html pages that extend off of the base, 
+    meaning we can put things like buttons, navbars, ect in base and they will be there in the other htmls aswell.-->
+<html lang="en">
+    <!--Link in bootstrap for better CSS-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <head>
+        <title>{% block title %} Painless Prep App {% endblock %}</title>
+    </head>
+
+    <body>
+        <div class="container-fluid bg-primary text-white py-2" name="headerBar" id="headerBar">
+            <h1 style="text-align: center;">Painless Prep</h1>
+        </div>
+        {% block content %} {% endblock content %}
+    </body> <!--Allows us to put whatever we want in the content block-->
+
+
+    
+</html>
