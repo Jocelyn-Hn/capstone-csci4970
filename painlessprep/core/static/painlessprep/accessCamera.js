@@ -4,12 +4,8 @@ const ctx = canvas.getContext("2d");
 let intervalActive;
 let fps = 15;
 
+// import { blobFrame } from "./blobJpegAndSend";
 
-
-// navigator.mediaDevices.getUserMedia({video : true})
-//         .then(stream => {video.srcObject = stream;}) //Pass stream in as the video source object
-//         .catch(err => {console.error("Camera Error: ", err);} //if an error occurs, pass that error to the console error
-//         );
 
 //Prompt the user to give access to the camera, then, stream that camera to the given <video> HTML block
 async function startVideo()
@@ -23,14 +19,16 @@ async function startVideo()
                 //if an error occurs, pass that error to the console error
                 console.error("Camera Error: ",err);
         }
+     
 }
 
 function captureFrame()
 {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        
 
         ctx.drawImage(video,0,0);
+
+        // blobFrame(canvas);
         
 }
 
