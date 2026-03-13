@@ -1,13 +1,16 @@
 import cv2 as cv
 import cv2.aruco as aruco
 import numpy as np
+import os
+
 
 MARKER_SIZE = 0.0349       # meters (marker edge length)
 M2_TO_IN2 = 1550.003       # m^2 → in^2 conversion
 SMOOTHING_ALPHA = 0.2      # EMA smoothing (0.1–0.3 recommended)
 
-camera_matrix = np.load("camera_matrix.npy")
-dist_coeffs = np.load("dist_coeffs.npy")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+camera_matrix = np.load(os.path.join(script_dir, "camera_matrix.npy"))
+dist_coeffs = np.load(os.path.join(script_dir, "dist_coeffs.npy"))
 
 # Stores smoothed 3D positions per marker ID
 smoothed_tvecs = {}
