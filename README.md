@@ -1,9 +1,12 @@
 # Painless Prep Application
-Description: Painless Prep is an application being developed to help reduce the time and energy investment needed for painters during the process of measuring windows so that they can be properly covered during the painting process. 
+
+## About
+The Painless Prep Application is a developing application intended to reduce the time and energy investment needed during the window-measuring process for painters so that they can be properly be covered during the painting process. 
 
 Planned features: 
     - Ability to quickly scan windows via AruCo markers using OpenCV to estimate proper window dimensions
     - Ability to group windows together as "rooms" that allow for neat and orderly processing from a third party
+    - Ability to measure windows with 2 or fewer reference markers
 
 # Group Members
 Jocelyn Horn<br/>
