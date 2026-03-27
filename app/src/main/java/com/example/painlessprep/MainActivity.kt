@@ -11,12 +11,21 @@ import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.JavaCameraView
 import org.opencv.android.OpenCVLoader
 import org.opencv.core.Mat
+import org.opencv.core.*
+import org.opencv.imgproc.Imgproc
+import org.opencv.objdetect.ArucoDetector
+import org.opencv.objdetect.Dictionary
+import org.opencv.objdetect.Objdetect
+import org.opencv.objdetect.DetectorParameters
 
 // Main activity implements OpenCV camera
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
 
     private lateinit var cameraView: JavaCameraView
+    private lateinit var arucoDetector: ArucoDetector
+    private lateinit var dictionary: Dictionary
+    private lateinit var parameters: DetectorParameters
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +36,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         } else {
             println("OpenCV loaded successfully")
         }
+        dictionary = Objdetect.getPredefinedDictionary(Objdetect.DICT_4X4_50)
+        parameters = DetectorParameters()
+        arucoDetector = ArucoDetector(dictionary, parameters)
 
         // Set the UI layout
         setContentView(R.layout.activity_main)
@@ -58,6 +70,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         // Re-initialize OpenCV when returning to app
         if (OpenCVLoader.initDebug()) {
+
             cameraView.setCameraPermissionGranted()
             cameraView.enableView()
         }
@@ -66,7 +79,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     override fun onPause() {
         super.onPause()
 
-        // Disable camera when app is paused (saves resources)
+        // Disable camera when app is paused
         cameraView.disableView()
     }
 
@@ -97,18 +110,63 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     // Called when camera starts
     override fun onCameraViewStarted(width: Int, height: Int) {
-        // No initialization currently
     }
 
     // Called when camera stops
     override fun onCameraViewStopped() {
-        // Cleanup resources here if needed
+        // Cleanup resources here
     }
 
     // Called for every camera frame
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
 
+        val rgba = inputFrame.rgba()
+        val gray = inputFrame.gray()
 
-        return inputFrame.rgba()
+        val corners = ArrayList<Mat>()
+        val ids = Mat()
+
+        // Detect markers
+        arucoDetector.detectMarkers(gray, corners, ids)
+
+        // display markers
+        if (!ids.empty()) {
+            for (i in corners.indices) {
+                val corner = corners[i]
+
+                // Convert corners to points
+                val points = MatOfPoint(
+                    Point(corner.get(0, 0)[0], corner.get(0, 0)[1]),
+                    Point(corner.get(0, 1)[0], corner.get(0, 1)[1]),
+                    Point(corner.get(0, 2)[0], corner.get(0, 2)[1]),
+                    Point(corner.get(0, 3)[0], corner.get(0, 3)[1])
+                )
+
+                // Draw marker outline
+                Imgproc.polylines(
+                    rgba,
+                    listOf(points),
+                    true,
+                    Scalar(0.0, 255.0, 0.0),
+                    3
+                )
+
+                // Draw marker ID
+                val centerX = (corner.get(0,0)[0] + corner.get(0,2)[0]) / 2
+                val centerY = (corner.get(0,0)[1] + corner.get(0,2)[1]) / 2
+
+                Imgproc.putText(
+                    rgba,
+                    "ID: ${ids[i, 0][0].toInt()}",
+                    Point(centerX, centerY),
+                    Imgproc.FONT_HERSHEY_SIMPLEX,
+                    1.0,
+                    Scalar(255.0, 0.0, 0.0),
+                    2
+                )
+            }
+        }
+
+        return rgba
     }
 }
