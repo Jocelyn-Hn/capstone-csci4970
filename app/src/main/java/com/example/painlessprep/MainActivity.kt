@@ -252,7 +252,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                     val markerId = ids[i,0][0].toInt()
 
                     //Create our imagePoints matrix, just uses the corners array values
-                    val imagePoints = MatOfPoint2f(corner)
+                    val pts = corner.reshape(2, 4)
+                    val imagePoints = MatOfPoint2f(pts)
 
                     //Now we need to define our known marker sizes for proper estimation
                     val markerSize = 0.05 //2inch converted to meters
@@ -332,13 +333,13 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                             val dx = tvec2.get(0,0)[0] - tvec1.get(0,0)[0]
                             val dy = tvec2.get(1,0)[0] - tvec1.get(1,0)[0]
                             val dz = tvec2.get(2,0)[0] - tvec1.get(2,0)[0]
-                            val markerDistance = sqrt(dx*dx + dy*dy + dz*dz)
+                            val markerDistance = sqrt(dx*dx + dy*dy + dz*dz) * 39.37
 
 
                             //draw the distance on the final frame
                             Imgproc.putText(
                                 rgba,
-                                "Distance $id1 - $id2: %.2f m".format(markerDistance),
+                                "Distance $id1 - $id2: %.2f in".format(markerDistance),
                                 Point(50.0,50.0+(30.0*j)),
                                 Imgproc.FONT_HERSHEY_SIMPLEX,
                                 0.8,
