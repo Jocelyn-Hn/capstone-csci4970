@@ -281,6 +281,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                         //And now, using the data collected, we can run SolvePNP to compute our rvec and tvec
                         Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, dCoeffMatOfDouble, rvec, tvec)
 
+                        markerTvecs.add(Pair(markerId, tvec))
+
                         //Now, given the results from solvePNP, we can calculate distances
                         val distanceFromCamera = sqrt(
                             //grab the x,y, and z of our tvec to calculate the distance from the camera
