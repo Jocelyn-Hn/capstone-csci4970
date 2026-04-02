@@ -22,6 +22,8 @@ import org.opencv.objdetect.Dictionary
 import org.opencv.objdetect.Objdetect
 import org.opencv.objdetect.DetectorParameters
 import android.widget.Button
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 
 // Main activity implements OpenCV camera
@@ -164,13 +166,16 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
         val rgba = inputFrame.rgba()
         val gray = inputFrame.gray()
+        var cameraMatrix: Mat? = null
+        var distortionCoeffs: Mat? = null
 
         if(savedCalibration != null) {
-            val (cameraMatrix, distanceCoeffs) = savedCalibration!!
-
+            val (cMat, dCoeffs) = savedCalibration!!
+            cameraMatrix = cMat
+            distortionCoeffs = dCoeffs
         }
 
-        //run calibration code, make sure we arent already in the process of calibrating
+        //run calibration code if we are in calibration mode, make sure we arent already in the process of calibrating
         if (isCalibrating && !isProcessingCalibration) {
             //grab out current time to know if we should capture a frame
             val currentTime = System.currentTimeMillis()
@@ -236,45 +241,115 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             // Detect markers
             arucoDetector.detectMarkers(gray, corners, ids)
 
-            // display markers
-            if (!ids.empty()) {
-                for (i in corners.indices) {
+            //we need a mat pair to hold id-tvec relations
+            val markerTvecs = mutableListOf<Pair<Int, Mat>>()
+
+            //Run solvePNP code
+            if(!ids.empty()) {
+                for ( i in corners.indices) {
                     val corner = corners[i]
+                    //grab our marker id
+                    val markerId = ids[i,0][0].toInt()
 
-                    // Convert corners to points
-                    val points = MatOfPoint(
-                        Point(corner.get(0, 0)[0], corner.get(0, 0)[1]),
-                        Point(corner.get(0, 1)[0], corner.get(0, 1)[1]),
-                        Point(corner.get(0, 2)[0], corner.get(0, 2)[1]),
-                        Point(corner.get(0, 3)[0], corner.get(0, 3)[1])
+                    //Create our imagePoints matrix, just uses the corners array values
+                    val imagePoints = MatOfPoint2f(corner)
+
+                    //Now we need to define our known marker sizes for proper estimation
+                    val markerSize = 0.05 //2inch converted to meters
+                    //now for our objectPoints matrix, this contains the markers coordinates to be changed
+                    val objectPoints = MatOfPoint3f (
+                        //Add four points to act as our corners
+                        Point3(-markerSize, markerSize, 0.0),//Top Left Corner
+                        Point3(markerSize, markerSize, 0.0),      //Top right corner
+                        Point3(markerSize, -markerSize, 0.0),     //Bottom Right Corner
+                        Point3(-markerSize, -markerSize, 0.0)     //Bottom Left Corner
                     )
 
-                    // Draw marker outline
-                    Imgproc.polylines(
-                        rgba,
-                        listOf(points),
-                        true,
-                        Scalar(0.0, 255.0, 0.0),
-                        3
-                    )
+                    //we now create our tvec and rvec matrixes to be written to later
+                    val rvec = Mat()
+                    val tvec = Mat()
 
-                    // Draw marker ID
-                    val centerX = (corner.get(0,0)[0] + corner.get(0,2)[0]) / 2
-                    val centerY = (corner.get(0,0)[1] + corner.get(0,2)[1]) / 2
+                    //We need one last thing, to convert our distortion coeff to a matofdouble,
+                    //since its nullable we must check it's not null
+                    if(distortionCoeffs != null) {
+                        val dCoeffMatOfDouble = MatOfDouble()
+                        val distArray = DoubleArray(distortionCoeffs.rows()) {
+                                i -> distortionCoeffs.get(i,0)[0]
+                        }
+                        dCoeffMatOfDouble.fromArray(*distArray)
 
-                    Imgproc.putText(
-                        rgba,
-                        "ID: ${ids[i, 0][0].toInt()}",
-                        Point(centerX, centerY),
-                        Imgproc.FONT_HERSHEY_SIMPLEX,
-                        1.0,
-                        Scalar(255.0, 0.0, 0.0),
-                        2
-                    )
+                        //And now, using the data collected, we can run SolvePNP to compute our rvec and tvec
+                        Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, dCoeffMatOfDouble, rvec, tvec)
+
+                        //Now, given the results from solvePNP, we can calculate distances
+                        val distanceFromCamera = sqrt(
+                            //grab the x,y, and z of our tvec to calculate the distance from the camera
+                            tvec.get(0, 0)[0].pow(2) +
+                                    tvec.get(1, 0)[0].pow(2) +
+                                    tvec.get(2, 0)[0].pow(2)
+                        )
+
+                        //from here, we can now begin to draw outlines, and start to get distance between markers
+                        val points = MatOfPoint (
+                            Point(corner.get(0,0)[0], corner.get(0,0)[1]),
+                            Point(corner.get(0,1)[0], corner.get(0,1)[1]),
+                            Point(corner.get(0,2)[0], corner.get(0,2)[1]),
+                            Point(corner.get(0,3)[0], corner.get(0,3)[1])
+                        )
+                        Imgproc.polylines(rgba, listOf(points), true, Scalar(0.0,255.0,0.0,3.0))
+
+                        //Next we draw the marker ID and distance from the camera onto the frame (cam dist not necessary for display but neat)
+                        val centerX = (corner.get(0,0)[0] + corner.get(0,2)[0])/2
+                        val centerY = (corner.get(0,0)[1] + corner.get(0,2)[1])/2
+
+                        //Write the data on the markers
+                        Imgproc.putText(
+                            rgba,
+                            "ID: $markerId : Dist: %.2f m".format(distanceFromCamera),
+                            Point(centerX,centerY),
+                            Imgproc.FONT_HERSHEY_SIMPLEX,
+                            1.0,
+                            Scalar(255.0,0.0,0.0),
+                            2
+                        )
+
+
+                    }
+
 
 
                 }
+
+                if(distortionCoeffs != null) {
+                    for (i in 0 until markerTvecs.size) {
+                        for (j in i+1 until markerTvecs.size) {
+                            val (id1, tvec1) = markerTvecs[i]
+                            val (id2, tvec2) = markerTvecs[j]
+
+                            //grab the distance x,y,z differences, sqrt(dx^2 + dy^2 + dz^2)
+                            val dx = tvec2.get(0,0)[0] - tvec1.get(0,0)[0]
+                            val dy = tvec2.get(1,0)[0] - tvec1.get(1,0)[0]
+                            val dz = tvec2.get(2,0)[0] - tvec1.get(2,0)[0]
+                            val markerDistance = sqrt(dx*dx + dy*dy + dz*dz)
+
+
+                            //draw the distance on the final frame
+                            Imgproc.putText(
+                                rgba,
+                                "Distance $id1 - $id2: %.2f m".format(markerDistance),
+                                Point(50.0,50.0+(30.0*j)),
+                                Imgproc.FONT_HERSHEY_SIMPLEX,
+                                0.8,
+                                Scalar(0.0,0.0,255.0),
+                                2
+                            )
+                        }
+                    }
+                }
+
+
             }
+
         }
         return rgba
     }
@@ -288,7 +363,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
 
         val cameraMatrix = Mat.zeros(3, 3, CvType.CV_64F)
-        val distanceCoeffs = Mat.zeros(5, 1, CvType.CV_64F)
+        val distortionCoeffs = Mat.zeros(5, 1, CvType.CV_64F)
         val rvecs = mutableListOf<Mat>()
         val tvecs = mutableListOf<Mat>()
 
@@ -298,7 +373,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             imagePointCast,
             imageSize,
             cameraMatrix,
-            distanceCoeffs,
+            distortionCoeffs,
             rvecs,
             tvecs
         )
@@ -307,7 +382,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
 
         //save our calibration data for future use
-        saveCalibration(cameraMatrix, distanceCoeffs)
+        saveCalibration(cameraMatrix, distortionCoeffs)
     }
 
     //Function to save calibration data
@@ -348,13 +423,13 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         //Load the distance coefficients data
         val distArray = json.getJSONArray("distanceCoeffs")
-        val distanceCoeffs = Mat(distArray.length(), 1, CvType.CV_64F)
+        val distortionCoeffs = Mat(distArray.length(), 1, CvType.CV_64F)
         for(i in 0 until distArray.length()) {
-            distanceCoeffs.put(i, 0, distArray.getDouble(i))
+            distortionCoeffs.put(i, 0, distArray.getDouble(i))
         }
 
         //return the data for usage
-        return Pair(cameraMatrix, distanceCoeffs)
+        return Pair(cameraMatrix, distortionCoeffs)
 
     }
 }
