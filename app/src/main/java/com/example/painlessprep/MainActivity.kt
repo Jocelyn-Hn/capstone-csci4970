@@ -324,28 +324,30 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                 }
 
                 if(distortionCoeffs != null) {
+                    var lineIndex = 0
+
                     for (i in 0 until markerTvecs.size) {
-                        for (j in i+1 until markerTvecs.size) {
+                        for (j in i + 1 until markerTvecs.size) {
+
                             val (id1, tvec1) = markerTvecs[i]
                             val (id2, tvec2) = markerTvecs[j]
 
-                            //grab the distance x,y,z differences, sqrt(dx^2 + dy^2 + dz^2)
                             val dx = tvec2.get(0,0)[0] - tvec1.get(0,0)[0]
                             val dy = tvec2.get(1,0)[0] - tvec1.get(1,0)[0]
                             val dz = tvec2.get(2,0)[0] - tvec1.get(2,0)[0]
-                            val markerDistance = sqrt(dx*dx + dy*dy + dz*dz) * 39.37
+                            val markerDistance = sqrt(dx*dx + dy*dy + dz*dz) * 39.37 - 8
 
-
-                            //draw the distance on the final frame
                             Imgproc.putText(
                                 rgba,
-                                "Distance $id1 - $id2: %.2f in".format(markerDistance),
-                                Point(50.0,50.0+(30.0*j)),
+                                "Distance $id1 - $id2: %.1f in".format(markerDistance),
+                                Point(50.0, 50.0 + (30.0 * lineIndex)),
                                 Imgproc.FONT_HERSHEY_SIMPLEX,
                                 0.8,
-                                Scalar(0.0,0.0,255.0),
+                                Scalar(0.0, 0.0, 255.0),
                                 2
                             )
+
+                            lineIndex++
                         }
                     }
                 }
