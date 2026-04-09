@@ -41,9 +41,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     //Boolean check to see if we are currently calibrating
     var isProcessingCalibration = false
     //Chessboard Square size (mine printed out to ~22mm per square
-    val calibSquareSize = .022 //22MM
+    val calibSquareSize = .021 //22MM
     //Amount of frames to take when we calibrate, 20-30 if good practice for calibration
-    val requiredFrames = 25
+    val requiredFrames = 40
     //The size of the chessboard, mine is 10x7 squares, which means its a 9x6 chessboard
     val boardSize = Size(9.0,6.0)
 
@@ -187,7 +187,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                 Calib3d.CALIB_CB_NORMALIZE_IMAGE or
                 Calib3d.CALIB_CB_FAST_CHECK)
 
-            if (foundBoard && currentTime - lastCaptureTime > 3000) {
+            if (foundBoard && currentTime - lastCaptureTime > 1000) {
                 //if we have found a board, and we are past the time threshold (0.33 fps)
                 lastCaptureTime = currentTime
 
@@ -197,8 +197,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                 }
                 //if we find a chessboard, refine the corners for more accuracy
                 Imgproc.cornerSubPix(
-                    gray, corners, Size(11.0, 11.0), Size(-1.0, -1.0),
-                    TermCriteria(TermCriteria.EPS + TermCriteria.MAX_ITER, 30, 0.1)
+                    gray,
+                    corners,
+                    Size(11.0, 11.0),
+                    Size(-1.0, -1.0),
+                    TermCriteria(TermCriteria.EPS + TermCriteria.MAX_ITER, 50, 0.001)
                 )
                 //Based off that refinement, add those  points to collected image points
                 collectedImagePoints.add(corners)
@@ -258,12 +261,14 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                     //Now we need to define our known marker sizes for proper estimation
                     val markerSize = 0.05 //2inch converted to meters
                     //now for our objectPoints matrix, this contains the markers coordinates to be changed
-                    val objectPoints = MatOfPoint3f (
-                        //Add four points to act as our corners
-                        Point3(-markerSize, markerSize, 0.0),//Top Left Corner
-                        Point3(markerSize, markerSize, 0.0),      //Top right corner
-                        Point3(markerSize, -markerSize, 0.0),     //Bottom Right Corner
-                        Point3(-markerSize, -markerSize, 0.0)     //Bottom Left Corner
+
+                    val halfSize = markerSize / 2.0
+
+                    val objectPoints = MatOfPoint3f(
+                        Point3(-halfSize,  halfSize, 0.0),
+                        Point3( halfSize,  halfSize, 0.0),
+                        Point3( halfSize, -halfSize, 0.0),
+                        Point3(-halfSize, -halfSize, 0.0)
                     )
 
                     //we now create our tvec and rvec matrixes to be written to later
@@ -335,7 +340,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                             val dx = tvec2.get(0,0)[0] - tvec1.get(0,0)[0]
                             val dy = tvec2.get(1,0)[0] - tvec1.get(1,0)[0]
                             val dz = tvec2.get(2,0)[0] - tvec1.get(2,0)[0]
-                            val markerDistance = sqrt(dx*dx + dy*dy + dz*dz) * 39.37 - 8
+                            val markerDistance = sqrt(dx*dx + dy*dy + dz*dz) * 39.37 + +.05 //add marker size
 
                             Imgproc.putText(
                                 rgba,
@@ -373,6 +378,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         val tvecs = mutableListOf<Mat>()
 
         //Run the calibration using
+        val flags = Calib3d.CALIB_RATIONAL_MODEL
+
         val rms = Calib3d.calibrateCamera(
             objectPointCast,
             imagePointCast,
@@ -380,7 +387,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             cameraMatrix,
             distortionCoeffs,
             rvecs,
-            tvecs
+            tvecs,
+            flags
         )
         runOnUiThread {
             Toast.makeText(this, "Calibration Finished! RMS ERROR: $rms", Toast.LENGTH_LONG).show()
