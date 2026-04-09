@@ -27,10 +27,6 @@ import kotlin.math.sqrt
 
 
 // Main activity implements OpenCV camera
-
-/**
- *The main class, holds all code related to the application.
- */
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
 
@@ -59,9 +55,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     var lastCaptureTime = 0L
 
 
-    /**
-     * Runs on startup, initializes many important variables and views.
-     */
+
+
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -76,7 +74,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         arucoDetector = ArucoDetector(dictionary, parameters)
         savedCalibration = loadCalibration()
         // Set the UI layout
-            setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_main)
 
         // Link the camera view from XML layout
         cameraView = findViewById(R.id.camera_view)
@@ -111,9 +109,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
     }
 
-    /**
-     * Allows the user to change focus back to the application, and camera, properly.
-     */
     override fun onResume() {
         super.onResume()
 
@@ -126,10 +121,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
     }
 
-    /**
-     * Allows the user to change focus away from the application and camera,
-     * without leaving the camera enabled.
-     */
     override fun onPause() {
         super.onPause()
 
@@ -137,9 +128,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         cameraView.disableView()
     }
 
-    /**
-     * Allows the user to cleanly close the camera and application.
-     */
     override fun onDestroy() {
         super.onDestroy()
 
@@ -147,10 +135,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         cameraView.disableView()
     }
 
-    /**
-     * Acts as the permission request and check for the camera,
-     * may be deprecated in modern kotlin standards.
-     */
     // Handle result of permission request
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -178,16 +162,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         // Cleanup resources here
     }
 
-
-    /**
-     * The main camera frame function. Is called for each frame grabbed during camera use.
-     *
-     * Within this function there is the majority of frame/image processing that allows for distance
-     * estimation to occur.
-     *
-     * @param[inputFrame] The camera frame that will be referenced.
-     * @return A OpenCV Matrix containing frame data.
-     */
+    // Called for every camera frame
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
         val rgba = inputFrame.rgba()
         val gray = inputFrame.gray()
@@ -209,8 +184,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             val foundBoard = Calib3d.findChessboardCorners(
                 gray, boardSize, corners,
                 Calib3d.CALIB_CB_ADAPTIVE_THRESH or
-                Calib3d.CALIB_CB_NORMALIZE_IMAGE or
-                Calib3d.CALIB_CB_FAST_CHECK)
+                        Calib3d.CALIB_CB_NORMALIZE_IMAGE or
+                        Calib3d.CALIB_CB_FAST_CHECK)
 
             if (foundBoard && currentTime - lastCaptureTime > 1000) {
                 //if we have found a board, and we are past the time threshold (0.33 fps)
@@ -389,11 +364,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return rgba
     }
 
-    /**
-     * Allows the application to run the camera calibration processes.
-     *
-     * @param[imageSize] An OpenCV Size type that corresponds to the given image/frame size.
-     */
+    //Function that actually runs the calibration
     fun runCalibration(imageSize : Size) {
 
         //Cast the image and object points as standard opencv mats
@@ -427,13 +398,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         saveCalibration(cameraMatrix, distortionCoeffs)
     }
 
-    /**
-     * Allows for saving of camera calibration data after calibration occurs.
-     *
-     * @param[cameraMatrix] An empty OpenCV matrix to write the camera matrix to.
-     * @param[distortionCoeffs] An empty OpenCV matrix to write the distortion coefficients to.
-     */
-    fun saveCalibration(cameraMatrix: Mat, distortionCoeffs: Mat) {
+    //Function to save calibration data
+    fun saveCalibration(cameraMatrix: Mat, distanceCoeffs: Mat) {
         //grab our current preference data
         val prefs = getSharedPreferences("CameraPrefs", MODE_PRIVATE)
 
@@ -442,8 +408,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         cameraMatrix.get(0,0, cameraArray)
 
         //fill distArray with our distance coeffecients
-        val distArray = DoubleArray(distortionCoeffs.total().toInt())
-        distortionCoeffs.get(0,0,distArray)
+        val distArray = DoubleArray(distanceCoeffs.total().toInt())
+        distanceCoeffs.get(0,0,distArray)
 
         //Crete our JSON object that will act as our storage
         val json = JSONObject()
@@ -453,13 +419,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         prefs.edit().putString("calibration", json.toString()).apply()
     }
 
-
-    /**
-     * Allows for loading any saved calibration data from device storage.
-     *
-     * @return A kotlin Pair type of two OpenCV Matrixes, meant to be the camera matrix,
-     * and the distortion coefficients.
-     */
     fun loadCalibration(): Pair<Mat, Mat>? {
         //dig into the preferences and grab our calibration preferences
         val prefs = getSharedPreferences("CameraPrefs", MODE_PRIVATE)
