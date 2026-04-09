@@ -39,6 +39,19 @@
                 android:layout_margin="40dp"
                 android:text="Capture" />
         </LinearLayout>
+        
+        <TextView
+            android:id="@+id/rmsText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RMS: --"
+            android:textSize="16sp"
+            android:padding="8dp"
+            android:layout_marginTop="120dp"
+            android:layout_gravity="right"
+             />
+
+
 
     </FrameLayout>
 

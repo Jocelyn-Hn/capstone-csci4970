@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.appcompat.app.AlertDialog
 import org.json.JSONArray
 import org.json.JSONObject
 import org.opencv.android.CameraBridgeViewBase
@@ -22,6 +23,7 @@ import org.opencv.objdetect.Dictionary
 import org.opencv.objdetect.Objdetect
 import org.opencv.objdetect.DetectorParameters
 import android.widget.Button
+import android.widget.TextView
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -34,14 +36,14 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     private lateinit var arucoDetector: ArucoDetector
     private lateinit var dictionary: Dictionary
     private lateinit var parameters: DetectorParameters
-    private var savedCalibration: Pair<Mat,Mat>? = null
+    private var savedCalibration: CalibrationData? = null
 
     //Boolean to check if we want to calibrate
     var isCalibrating = false
     //Boolean check to see if we are currently calibrating
     var isProcessingCalibration = false
     //Chessboard Square size (mine printed out to ~22mm per square
-    val calibSquareSize = .021 //22MM
+    val calibSquareSize = .022 //22MM
     //Amount of frames to take when we calibrate, 20-30 if good practice for calibration
     val requiredFrames = 40
     //The size of the chessboard, mine is 10x7 squares, which means its a 9x6 chessboard
@@ -73,11 +75,18 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         parameters = DetectorParameters()
         arucoDetector = ArucoDetector(dictionary, parameters)
         savedCalibration = loadCalibration()
+
         // Set the UI layout
         setContentView(R.layout.activity_main)
 
         // Link the camera view from XML layout
         cameraView = findViewById(R.id.camera_view)
+
+        //Update the rms display if we have loaded calibration data
+        val calibData = savedCalibration
+        if(calibData != null) {
+            updateRmsDisplay(calibData.rms)
+        }
 
         // Make sure the camera view is visible
         cameraView.visibility = SurfaceView.VISIBLE
@@ -99,12 +108,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         val btnCalibrate = findViewById<Button>(R.id.btn_calibrate)
         btnCalibrate.setOnClickListener {
-            isCalibrating = true
-            collectedObjectPoints.clear()
-            collectedImagePoints.clear()
-            runOnUiThread {
-                Toast.makeText(this,"Beginning calibration, please keep a chessboard in camera view and move around!", Toast.LENGTH_LONG).show()
-            }
+            //prompt the calibration instructions to check if we are calibrating
+            promptCalibration()
 
         }
     }
@@ -393,13 +398,14 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         runOnUiThread {
             Toast.makeText(this, "Calibration Finished! RMS ERROR: $rms", Toast.LENGTH_LONG).show()
         }
+        updateRmsDisplay(rms)
 
         //save our calibration data for future use
-        saveCalibration(cameraMatrix, distortionCoeffs)
+        saveCalibration(cameraMatrix, distortionCoeffs, rms)
     }
 
     //Function to save calibration data
-    fun saveCalibration(cameraMatrix: Mat, distanceCoeffs: Mat) {
+    fun saveCalibration(cameraMatrix: Mat, distanceCoeffs: Mat, rms: Double ) {
         //grab our current preference data
         val prefs = getSharedPreferences("CameraPrefs", MODE_PRIVATE)
 
@@ -411,15 +417,19 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         val distArray = DoubleArray(distanceCoeffs.total().toInt())
         distanceCoeffs.get(0,0,distArray)
 
+        val rmsVal = rms
+
         //Crete our JSON object that will act as our storage
         val json = JSONObject()
         json.put("cameraMatrix", JSONArray(cameraArray.toList()))
         json.put("distanceCoeffs", JSONArray(distArray.toList()))
+        json.put("rmsValue", rmsVal)
+
 
         prefs.edit().putString("calibration", json.toString()).apply()
     }
 
-    fun loadCalibration(): Pair<Mat, Mat>? {
+    fun loadCalibration(): CalibrationData? {
         //dig into the preferences and grab our calibration preferences
         val prefs = getSharedPreferences("CameraPrefs", MODE_PRIVATE)
         val jsonString = prefs.getString("calibration", null) ?: return null
@@ -441,8 +451,72 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             distortionCoeffs.put(i, 0, distArray.getDouble(i))
         }
 
+        //Load the RMS error value of the saved data
+        val rms = json.getDouble("rmsValue")
+
         //return the data for usage
-        return Pair(cameraMatrix, distortionCoeffs)
+        return CalibrationData(cameraMatrix, distortionCoeffs, rms)
 
     }
+
+    /**
+     * Allows displaying of a prompt before calibration starts.
+     * This prompt will instruct the user on how to best calibrate their device for measuring.
+     * This utilizes the AlertDialog class from androidx
+     */
+    fun promptCalibration() {
+        //create the alert dialog builder
+        val builder: AlertDialog.Builder = AlertDialog.Builder(this)
+        var promptResult = false
+
+        //set the dialog text/titles
+        builder
+            .setTitle("Calibration Instructions")
+            .setMessage("To calibrate your device, " +
+                        "please move the camera around the provided chessboard," +
+                        "try to get many angles and different orientations of the board." +
+                        "The device will alert you when finished!")
+            .setPositiveButton("I understand") { dialog, which ->
+                isCalibrating = true
+                collectedObjectPoints.clear()
+                collectedImagePoints.clear()
+
+                Toast.makeText(this,"Beginning calibration, please keep a chessboard in camera view and move around!", Toast.LENGTH_LONG).show()
+            }
+            .setNegativeButton("Cancel") { dialog, which ->
+                isCalibrating = false
+                Toast.makeText(this,"Calibration ended, please retry.", Toast.LENGTH_LONG).show()
+            }
+
+        //Create our dialog alert
+        val dialog: AlertDialog = builder.create()
+        dialog.show()
+
+    }
+
+    /**
+     * Updates the RMS error display value
+     *
+     * @param[rms] A double representing the RMS error returned when calibrating.
+     */
+    fun updateRmsDisplay(rms: Double) {
+        val textView = findViewById<TextView>(R.id.rmsText)
+
+        val formattedText = String.format("RMS: %.3f", rms)
+        runOnUiThread {
+            textView.text = formattedText
+        }
+
+    }
+
 }
+
+
+/**
+ * Acts as the storage device for our calibration data
+ */
+data class CalibrationData(
+    val cameraMatrix: Mat,
+    val distortionCoeffs: Mat,
+    val rms: Double
+)
