@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     //Chessboard Square size (mine printed out to ~22mm per square
     val calibSquareSize = .022 //22MM
     //Amount of frames to take when we calibrate, 20-30 if good practice for calibration
-    val requiredFrames = 40
+    val requiredFrames = 30
     //The size of the chessboard, mine is 10x7 squares, which means its a 9x6 chessboard
     val boardSize = Size(9.0,6.0)
 
@@ -189,8 +189,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             val foundBoard = Calib3d.findChessboardCorners(
                 gray, boardSize, corners,
                 Calib3d.CALIB_CB_ADAPTIVE_THRESH or
-                        Calib3d.CALIB_CB_NORMALIZE_IMAGE or
-                        Calib3d.CALIB_CB_FAST_CHECK)
+                        Calib3d.CALIB_CB_NORMALIZE_IMAGE)
 
             if (foundBoard && currentTime - lastCaptureTime > 1000) {
                 //if we have found a board, and we are past the time threshold (0.33 fps)
@@ -347,9 +346,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                             val dz = tvec2.get(2,0)[0] - tvec1.get(2,0)[0]
                             val markerDistance = sqrt(dx*dx + dy*dy + dz*dz) * 39.37 + +.05 //add marker size
 
+                            //Display the measurement results to the 16th, or 4 decimal places
                             Imgproc.putText(
                                 rgba,
-                                "Distance $id1 - $id2: %.1f in".format(markerDistance),
+                                "Distance $id1 - $id2: %.2f in".format(markerDistance),
                                 Point(50.0, 50.0 + (30.0 * lineIndex)),
                                 Imgproc.FONT_HERSHEY_SIMPLEX,
                                 0.8,
@@ -402,6 +402,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         //save our calibration data for future use
         saveCalibration(cameraMatrix, distortionCoeffs, rms)
+
+        isProcessingCalibration = false
     }
 
     //Function to save calibration data
