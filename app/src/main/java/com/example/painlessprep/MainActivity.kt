@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     //Boolean check to see if we are currently calibrating
     var isProcessingCalibration = false
     //Chessboard Square size (mine printed out to ~22mm per square
-    val calibSquareSize = .022 //22MM
+    val calibSquareSize = .016 //22MM
     //Amount of frames to take when we calibrate, 20-30 if good practice for calibration
     val requiredFrames = 30
     //The size of the chessboard, mine is 10x7 squares, which means its a 9x6 chessboard
@@ -344,12 +344,14 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                             val dx = tvec2.get(0,0)[0] - tvec1.get(0,0)[0]
                             val dy = tvec2.get(1,0)[0] - tvec1.get(1,0)[0]
                             val dz = tvec2.get(2,0)[0] - tvec1.get(2,0)[0]
-                            val markerDistance = sqrt(dx*dx + dy*dy + dz*dz) * 39.37 + +.05 //add marker size
+                            val markerDistance = (sqrt(dx*dx + dy*dy + dz*dz) * 39.37) + 2//add marker size
+                            val rounded = kotlin.math.round(markerDistance * 16) / 16 //round to the nearest 16th of an inch
+
 
                             //Display the measurement results to the 16th, or 4 decimal places
                             Imgproc.putText(
                                 rgba,
-                                "Distance $id1 - $id2: %.2f in".format(markerDistance),
+                                "Distance $id1 - $id2: %.2f in".format(rounded),
                                 Point(50.0, 50.0 + (30.0 * lineIndex)),
                                 Imgproc.FONT_HERSHEY_SIMPLEX,
                                 0.8,
