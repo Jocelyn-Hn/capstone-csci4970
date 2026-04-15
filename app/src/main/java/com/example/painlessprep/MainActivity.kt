@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     //Boolean check to see if we are currently calibrating
     var isProcessingCalibration = false
     //Chessboard Square size (mine printed out to ~22mm per square
-    val calibSquareSize = .016 //22MM
+    val calibSquareSize = .022 //22MM
     //Amount of frames to take when we calibrate, 20-30 if good practice for calibration
     val requiredFrames = 30
     //The size of the chessboard, mine is 10x7 squares, which means its a 9x6 chessboard
@@ -55,6 +55,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     //used for calibration delay
     var lastCaptureTime = 0L
+
+    //our global distance measurements each frame
+    var idHeight : Double = 0.0 //0 to 1 distance
+    var idWidth : Double = 0.0 //1 to 2 distance
 
 
 
@@ -111,6 +115,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             //prompt the calibration instructions to check if we are calibrating
             promptCalibration()
 
+        }
+
+        val btnCapture = findViewById<Button>(R.id.btn_capture)
+        btnCapture.setOnClickListener {
+            captureMeasurement(idWidth,idHeight)
         }
     }
 
@@ -341,9 +350,16 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                             val (id1, tvec1) = markerTvecs[i]
                             val (id2, tvec2) = markerTvecs[j]
 
+                            //if the two ids are the hypotenuse, skip
+                            if((id1 == 0 && id2 == 2) || (id1 == 2 && id2 == 0)) continue
+
+                            //we obtain our measurements through finding the difference in coordinate values
                             val dx = tvec2.get(0,0)[0] - tvec1.get(0,0)[0]
                             val dy = tvec2.get(1,0)[0] - tvec1.get(1,0)[0]
                             val dz = tvec2.get(2,0)[0] - tvec1.get(2,0)[0]
+
+                            //then take the square root of each value squared and summed,
+                            //multiplied to convert to inches,and add 2 inches to account for marker size
                             val markerDistance = (sqrt(dx*dx + dy*dy + dz*dz) * 39.37) + 2//add marker size
                             val rounded = kotlin.math.round(markerDistance * 16) / 16 //round to the nearest 16th of an inch
 
@@ -359,9 +375,22 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                                 2
                             )
 
+                            if((id1 == 0 && id2 == 1) || (id1 == 1 && id2 == 0)) {
+                                // 0-1 measurement write
+                                id01 = rounded
+                            } else if ((id1 == 1 && id2 == 2) || (id1 == 2 && id2 == 1)) {
+                                //1-2 check
+                                id12 = rounded
+                            }
+
+
                             lineIndex++
                         }
                     }
+
+
+
+
                 }
 
 
@@ -471,7 +500,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     fun promptCalibration() {
         //create the alert dialog builder
         val builder: AlertDialog.Builder = AlertDialog.Builder(this)
-        var promptResult = false
 
         //set the dialog text/titles
         builder
@@ -512,6 +540,19 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
 
     }
+
+    /**
+     * Allows the user to capture measurement data to then export to csv.
+     * @param[id01] Our 0-1 distance measurement
+     * @param[id12] Our 1-2 distance measurement
+     *
+     * @return a <double, double> pair containing the width and height
+     */
+    fun captureMeasurement(idWidth: Double, idHeight: Double) : Pair<Double,Double> {
+        var widthHeight : Pair<Double,Double> = Pair(idWidth, idHeight)
+        return widthHeight
+    }
+
 
 }
 
