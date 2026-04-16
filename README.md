@@ -1,9 +1,9 @@
 # Painless Prep Application
 Description: Painless Prep is an application being developed to help reduce the time and energy investment needed for painters during the process of measuring windows so that they can be properly covered during the painting process. 
 
-Notable Features:
+Notable Features:<br/>
     - Distance measurement between Aruco markers<br/>
-    - Camera calibration for Aruco detection<br/>
+    - Camera calibration for Aruco detection<br/><t/>
         * Calibration data is saved between application usage<br/>
     - Mesurement capturing, saving, and exporting to CSV files.<br/>
 
