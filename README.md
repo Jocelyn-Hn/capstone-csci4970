@@ -3,8 +3,8 @@ Description: Painless Prep is an application being developed to help reduce the 
 
 Notable Features:<br/>
     - Distance measurement between Aruco markers<br/>
-    - Camera calibration for Aruco detection<br/><t/>
-        * Calibration data is saved between application usage<br/>
+    - Camera calibration for Aruco detection<br/>
+    &nbsp;* Calibration data is saved between application usage<br/>
     - Mesurement capturing, saving, and exporting to CSV files.<br/>
 
 # Group Members
