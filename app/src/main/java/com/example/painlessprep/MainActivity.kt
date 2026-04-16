@@ -66,6 +66,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
 
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -182,6 +184,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         val gray = inputFrame.gray()
         var cameraMatrix: Mat? = null
         var distortionCoeffs: Mat? = null
+        var id01 = 0.0
+        var id12 = 0.0
+
+
+
 
         if(savedCalibration != null) {
             val (cMat, dCoeffs) = savedCalibration!!
@@ -343,6 +350,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
                 if(distortionCoeffs != null) {
                     var lineIndex = 0
+
 
                     for (i in 0 until markerTvecs.size) {
                         for (j in i + 1 until markerTvecs.size) {
