@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.SurfaceView
+import android.view.Window
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -23,7 +24,9 @@ import org.opencv.objdetect.Dictionary
 import org.opencv.objdetect.Objdetect
 import org.opencv.objdetect.DetectorParameters
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
+import java.io.File
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -77,6 +80,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         } else {
             println("OpenCV loaded successfully")
         }
+
         dictionary = Objdetect.getPredefinedDictionary(Objdetect.DICT_4X4_50)
         parameters = DetectorParameters()
         arucoDetector = ArucoDetector(dictionary, parameters)
@@ -385,10 +389,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
                             if((id1 == 0 && id2 == 1) || (id1 == 1 && id2 == 0)) {
                                 // 0-1 measurement write
-                                id01 = rounded
+                                idHeight = rounded
                             } else if ((id1 == 1 && id2 == 2) || (id1 == 2 && id2 == 1)) {
                                 //1-2 check
-                                id12 = rounded
+                                idWidth = rounded
                             }
 
 
@@ -551,14 +555,57 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     /**
      * Allows the user to capture measurement data to then export to csv.
-     * @param[id01] Our 0-1 distance measurement
-     * @param[id12] Our 1-2 distance measurement
-     *
-     * @return a <double, double> pair containing the width and height
+     * @param[idWidth] Our 0-1 distance measurement
+     * @param[idHeight] Our 1-2 distance measurement
      */
-    fun captureMeasurement(idWidth: Double, idHeight: Double) : Pair<Double,Double> {
-        var widthHeight : Pair<Double,Double> = Pair(idWidth, idHeight)
-        return widthHeight
+    fun captureMeasurement(idWidth: Double, idHeight: Double) {
+        val textEntry = EditText(this)
+        textEntry.hint = "Enter Window Name.."
+
+        val builder: AlertDialog.Builder = AlertDialog.Builder(this)
+        builder
+            .setTitle("Measurement Details")
+            .setMessage("The following measurement data will be saved: \n" +
+                    "Width: $idWidth\n" +
+                    "Height: $idHeight\n")
+            .setView(textEntry)
+            .setPositiveButton("Confirm") { dialog, which ->
+                val name = textEntry.text.toString()
+
+                val windowData = WindowData(name, idWidth, idHeight)
+
+                saveMeasurementData(windowData)
+
+            }
+            .setNegativeButton("Cancel") { dialog, which ->
+                Toast.makeText(this,"Measurement cancelled, please try again!", Toast.LENGTH_LONG).show()
+            }
+
+
+        //Create our dialog alert
+        val dialog: AlertDialog = builder.create()
+        dialog.show()
+
+    }
+
+
+    /**
+     * Allows saving of measurement data to a "measurements.csv" file
+     *
+     * @param[measurement] a WindowData object that holds the measurement name, width, and height
+     */
+    fun saveMeasurementData(measurement : WindowData) {
+        //Link to the measurements csv file, if not created then create one and write the header
+        val csvFile = File(this.filesDir, "measurements.csv")
+        if(!csvFile.exists()) {
+            csvFile.writeText("name,width,height\n")
+        }
+
+        csvFile.appendText("${measurement.name},${measurement.width},${measurement.height}\n")
+        runOnUiThread {
+            Toast.makeText(this,"Measurement '${measurement.name}' saved!", Toast.LENGTH_LONG).show()
+        }
+
     }
 
 
@@ -567,9 +614,26 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
 /**
  * Acts as the storage device for our calibration data
+ *
+ * @param[cameraMatrix] The camera matrix data obtained through calibration
+ * @param[distortionCoeffs] The camera distortion coefficients obtained through calibration
+ * @param[rms] The calibration error number to show how well calibration worked
  */
 data class CalibrationData(
     val cameraMatrix: Mat,
     val distortionCoeffs: Mat,
     val rms: Double
+)
+
+/**
+ * Acts as a storage device for the window measurements and name
+ *
+ * @param[name] The window name entered by the user
+ * @param[width] The width of the given measurement
+ * @param[height] The height of the given measurement
+ */
+data class WindowData(
+    val name : String,
+    val width : Double,
+    val height : Double
 )
