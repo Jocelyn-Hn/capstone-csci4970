@@ -5,7 +5,7 @@ Notable Features:<br/>
     &nbsp;&nbsp;&nbsp;- Distance measurement between Aruco markers<br/>
     &nbsp;&nbsp;&nbsp;- Camera calibration for Aruco detection<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Calibration data is saved between application usage<br/>
-    - Mesurement capturing, saving, and exporting to CSV files.<br/>
+    &nbsp;&nbsp;&nbsp;- Mesurement capturing, saving, and exporting to CSV files.<br/>
 
 # Group Members
 Jocelyn Horn<br/>
