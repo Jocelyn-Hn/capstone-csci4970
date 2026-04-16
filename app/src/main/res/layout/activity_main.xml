@@ -23,7 +23,8 @@
             android:layout_height="145dp"
             android:layout_gravity="bottom"
             android:gravity="center"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginBottom="75dp">
 
             <Button
                 android:id="@+id/btn_calibrate"
@@ -39,7 +40,7 @@
                 android:layout_margin="40dp"
                 android:text="Capture" />
         </LinearLayout>
-        
+
         <TextView
             android:id="@+id/rmsText"
             android:layout_width="wrap_content"
