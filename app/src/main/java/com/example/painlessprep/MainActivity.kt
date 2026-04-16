@@ -60,8 +60,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     var lastCaptureTime = 0L
 
     //our global distance measurements each frame
-    var idHeight : Double? = 0.0 //0 to 1 distance
-    var idWidth : Double? = 0.0 //1 to 2 distance
+    var idHeight : Double = 0.0 //0 to 1 distance
+    var idWidth : Double = 0.0 //1 to 2 distance
 
 
 
