@@ -1,0 +1,17 @@
+{
+  "installationFolder": "C:\\Users\\mario\\Desktop\\School stuff\\Capstone - Painless Prep\\Github\\capstone-csci4970\\OpenCV16kb\\build\\intermediates\\prefab_package\\release\\prefab",
+  "gradlePath": ":OpenCV16kb",
+  "packageInfo": {
+    "packageName": "OpenCV16kb",
+    "packageSchemaVersion": 2,
+    "packageDependencies": [],
+    "modules": [
+      {
+        "moduleName": "opencv_jni_shared",
+        "moduleHeaders": "C:\\Users\\mario\\Desktop\\School stuff\\Capstone - Painless Prep\\Github\\capstone-csci4970\\OpenCV16kb\\native\\jni\\include",
+        "moduleExportLibraries": [],
+        "abis": []
+      }
+    ]
+  }
+}

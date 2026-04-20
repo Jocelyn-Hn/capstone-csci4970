@@ -32,6 +32,9 @@ import kotlin.math.sqrt
 
 
 // Main activity implements OpenCV camera
+/**
+ * The main class of Pane Perfect, contains all functions used in the application.
+ */
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
 
@@ -46,7 +49,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     //Boolean check to see if we are currently calibrating
     var isProcessingCalibration = false
     //Chessboard Square size (mine printed out to ~22mm per square
-    val calibSquareSize = .024 //22MM
+    val calibSquareSize = .022 //22MM
     //Amount of frames to take when we calibrate, 20-30 if good practice for calibration
     val requiredFrames = 30
     //The size of the chessboard, mine is 10x7 squares, which means its a 9x6 chessboard
@@ -64,13 +67,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     var idWidth : Double = 0.0 //1 to 2 distance
 
 
-
-
-
-
-
-
-
+    /**
+     * The function called on the initial load of the application.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -129,6 +128,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
     }
 
+    /**
+     * The function called when focusing back onto the application from an unfocused view.
+     */
     override fun onResume() {
         super.onResume()
 
@@ -141,6 +143,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
     }
 
+    /**
+     * The function called when un-focusing from view. (Tabbing out)
+     */
     override fun onPause() {
         super.onPause()
 
@@ -148,6 +153,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         cameraView.disableView()
     }
 
+    /**
+     * Function called to kill the application properly.
+     */
     override fun onDestroy() {
         super.onDestroy()
 
@@ -155,6 +163,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         cameraView.disableView()
     }
 
+    /**
+     * Function called to handle the permission request popup.
+     */
     // Handle result of permission request
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -173,6 +184,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
     }
 
+
     // Called when camera starts
     override fun onCameraViewStarted(width: Int, height: Int) {
     }
@@ -182,6 +194,15 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         // Cleanup resources here
     }
 
+
+    /**
+     * Main function called every "frame", essentially called ~30 times per second.
+     * This function is also where we check if we are calibrating, or writing aruco data to the screen.
+     *
+     * @param[inputFrame] The given frame returned by the OpenCV camera view.
+     *
+     * @return An OpenCV matrix consisting of the camera frame data.
+     */
     // Called for every camera frame
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
         val rgba = inputFrame.rgba()
@@ -412,6 +433,12 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return rgba
     }
 
+
+    /**
+     * The function that performs camera calibration
+     *
+     * @param[imageSize] An OpenCV size object, representing the image width and height
+     */
     //Function that actually runs the calibration
     fun runCalibration(imageSize : Size) {
 
@@ -449,8 +476,16 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         isProcessingCalibration = false
     }
 
+
+    /**
+     * The function that saves a cameras calibration data to a devices storage for later use.
+     *
+     * @param[cameraMatrix] An OpenCV matrix for storing the camera data to.
+     * @param[distortionCoeffs] An OpenCV matrix for storing the camera distortion coefficients to.
+     * @param[rms] A double to store the calibration error value to.
+     */
     //Function to save calibration data
-    fun saveCalibration(cameraMatrix: Mat, distanceCoeffs: Mat, rms: Double ) {
+    fun saveCalibration(cameraMatrix: Mat, distortionCoeffs: Mat, rms: Double ) {
         //grab our current preference data
         val prefs = getSharedPreferences("CameraPrefs", MODE_PRIVATE)
 
@@ -459,8 +494,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         cameraMatrix.get(0,0, cameraArray)
 
         //fill distArray with our distance coeffecients
-        val distArray = DoubleArray(distanceCoeffs.total().toInt())
-        distanceCoeffs.get(0,0,distArray)
+        val distArray = DoubleArray(distortionCoeffs.total().toInt())
+        distortionCoeffs.get(0,0,distArray)
 
         val rmsVal = rms
 
@@ -474,6 +509,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         prefs.edit().putString("calibration", json.toString()).apply()
     }
 
+    /**
+     * The fucntion utilized to load calibration data on application opening.
+     *
+     * @return A nullable CalibrationData data object storing the loaded json data.
+     */
     fun loadCalibration(): CalibrationData? {
         //dig into the preferences and grab our calibration preferences
         val prefs = getSharedPreferences("CameraPrefs", MODE_PRIVATE)
