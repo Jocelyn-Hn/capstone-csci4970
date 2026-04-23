@@ -29,6 +29,7 @@ import android.widget.TextView
 import java.io.File
 import kotlin.math.pow
 import kotlin.math.sqrt
+import com.example.painlessprep.CsvUtils
 
 
 // Main activity implements OpenCV camera
@@ -49,7 +50,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     //Boolean check to see if we are currently calibrating
     var isProcessingCalibration = false
     //Chessboard Square size (mine printed out to ~22mm per square
-    val calibSquareSize = .022 //22MM
+    val calibSquareSize = .024 //22MM
     //Amount of frames to take when we calibrate, 20-30 if good practice for calibration
     val requiredFrames = 30
     //The size of the chessboard, mine is 10x7 squares, which means its a 9x6 chessboard
@@ -304,6 +305,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                     val imagePoints = MatOfPoint2f(pts)
 
                     //Now we need to define our known marker sizes for proper estimation
+                    //2inch = 0.05
+                    //2.5inch = 0.064
+                    //3inch = 0.076
                     val markerSize = 0.05 //2inch converted to meters
                     //now for our objectPoints matrix, this contains the markers coordinates to be changed
 
@@ -397,21 +401,33 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                             val rounded = kotlin.math.round(markerDistance * 16) / 16 //round to the nearest 16th of an inch
 
 
-                            //Display the measurement results to the 16th, or 4 decimal places
-                            Imgproc.putText(
-                                rgba,
-                                "Distance $id1 - $id2: %.2f in".format(rounded),
-                                Point(50.0, 50.0 + (30.0 * lineIndex)),
-                                Imgproc.FONT_HERSHEY_SIMPLEX,
-                                0.8,
-                                Scalar(0.0, 0.0, 255.0),
-                                2
-                            )
+
 
                             if((id1 == 0 && id2 == 1) || (id1 == 1 && id2 == 0)) {
+                                //Display the measurement results to the 16th, or 4 decimal places
+                                Imgproc.putText(
+                                    rgba,
+                                    "Height: %.2f in".format(rounded),
+                                    Point(50.0, 50.0 + (30.0 * lineIndex)),
+                                    Imgproc.FONT_HERSHEY_SIMPLEX,
+                                    0.8,
+                                    Scalar(5.0, 252.0, 244.0),
+                                    2
+                                )
+
                                 // 0-1 measurement write
                                 idHeight = rounded
                             } else if ((id1 == 1 && id2 == 2) || (id1 == 2 && id2 == 1)) {
+                                //Display the measurement results to the 16th, or 4 decimal places
+                                Imgproc.putText(
+                                    rgba,
+                                    "Width: %.2f in".format(rounded),
+                                    Point(50.0, 50.0 + (30.0 * lineIndex)),
+                                    Imgproc.FONT_HERSHEY_SIMPLEX,
+                                    0.8,
+                                    Scalar(5.0, 252.0, 244.0),
+                                    2
+                                )
                                 //1-2 check
                                 idWidth = rounded
                             }
@@ -591,6 +607,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             textView.text = formattedText
         }
 
+
     }
 
     /**
@@ -614,7 +631,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
                 val windowData = WindowData(name, idWidth, idHeight)
 
-                saveMeasurementData(windowData)
+                val measurementName = windowData.name
+                val measurementCsv : String = CsvUtils.formatCsvString(windowData)
+
+                saveMeasurementData(measurementCsv, measurementName)
 
             }
             .setNegativeButton("Cancel") { dialog, which ->
@@ -632,21 +652,24 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     /**
      * Allows saving of measurement data to a "measurements.csv" file
      *
-     * @param[measurement] a WindowData object that holds the measurement name, width, and height
+     * @param[measurement] The measurement string formatted for csv writing.
+     * @param[name] The measurement name as returned from the WindowData class.
      */
-    fun saveMeasurementData(measurement : WindowData) {
+    fun saveMeasurementData(measurement : String, name : String) {
         //Link to the measurements csv file, if not created then create one and write the header
         val csvFile = File(this.filesDir, "measurements.csv")
         if(!csvFile.exists()) {
             csvFile.writeText("name,width,height\n")
         }
 
-        csvFile.appendText("${measurement.name},${measurement.width},${measurement.height}\n")
+        csvFile.appendText(measurement)
         runOnUiThread {
-            Toast.makeText(this,"Measurement '${measurement.name}' saved!", Toast.LENGTH_LONG).show()
+            Toast.makeText(this,"Measurement '${name}' saved!", Toast.LENGTH_LONG).show()
         }
 
     }
+
+
 
 
 }
@@ -677,3 +700,4 @@ data class WindowData(
     val width : Double,
     val height : Double
 )
+
