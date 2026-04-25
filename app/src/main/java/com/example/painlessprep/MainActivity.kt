@@ -28,6 +28,7 @@ import android.widget.EditText
 import android.widget.TextView
 import java.io.File
 import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 
@@ -365,13 +366,13 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                             //then take the square root of each value squared and summed,
                             //multiplied to convert to inches,and add 2 inches to account for marker size
                             val markerDistance = (sqrt(dx*dx + dy*dy + dz*dz) * 39.37) + 2//add marker size
-                            val rounded = kotlin.math.round(markerDistance * 16) / 16 //round to the nearest 16th of an inch
+                            val rounded = kotlin.math.round(markerDistance * 32) / 32 //round to the nearest 16th of an inch
 
 
-                            //Display the measurement results to the 16th, or 4 decimal places
+                            //Display the measurement results to the 32nd, or 4 decimal places
                             Imgproc.putText(
                                 rgba,
-                                "Distance $id1 - $id2: %.2f in".format(rounded),
+                                "Distance $id1 - $id2: ${decimalTo32nds(rounded)}",
                                 Point(50.0, 50.0 + (30.0 * lineIndex)),
                                 Imgproc.FONT_HERSHEY_SIMPLEX,
                                 0.8,
@@ -554,8 +555,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         val textEntry = EditText(this)
         textEntry.hint = "Enter Window Name.."
 
+
         val builder: AlertDialog.Builder = AlertDialog.Builder(this)
         builder
+
             .setTitle("Measurement Details")
             .setMessage("The following measurement data will be saved: \n" +
                     "Width: $idWidth\n" +
@@ -598,6 +601,19 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             Toast.makeText(this,"Measurement '${measurement.name}' saved!", Toast.LENGTH_LONG).show()
         }
 
+    }
+    fun decimalTo32nds(inches: Double): String {
+        val wholeInches = inches.toInt()
+        val remainder = inches - wholeInches
+        val thirtySeconds = (remainder * 32).roundToInt()
+
+        return if (thirtySeconds == 0) {
+            "$wholeInches\""
+        } else if (thirtySeconds == 32) {
+            "${wholeInches + 1}\""
+        } else {
+            "$wholeInches $thirtySeconds/32\""
+        }
     }
 
 
