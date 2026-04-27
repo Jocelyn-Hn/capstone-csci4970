@@ -1,5 +1,8 @@
 package com.example.painlessprep
 
+/**
+ * An object class meant for helping with csv formatting and whatnot.
+ */
 object CsvUtils {
 
     /**

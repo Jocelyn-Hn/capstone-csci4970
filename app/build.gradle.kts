@@ -56,10 +56,24 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 }
 
-tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
-    dokkaSourceSets.configureEach {
-        includeNonPublic.set(true)
-        skipEmptyPackages.set(false)
-        reportUndocumented.set(false)
+tasks.dokkaHtml {
+    dokkaSourceSets {
+        configureEach {
+            documentedVisibilities.set(
+                setOf(org.jetbrains.dokka.DokkaConfiguration.Visibility.PUBLIC)
+            )
+            suppressInheritedMembers.set(true)
+            skipDeprecated.set(true)
+
+            perPackageOption {
+                matchingRegex.set(".*")
+                suppress.set(true)
+            }
+
+            perPackageOption {
+                matchingRegex.set("com\\.example\\.painlessprep\\..*")
+                suppress.set(false)
+            }
+        }
     }
 }
