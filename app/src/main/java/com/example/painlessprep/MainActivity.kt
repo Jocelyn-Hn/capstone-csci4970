@@ -3,9 +3,11 @@ package com.example.painlessprep
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.InputType
 import android.view.SurfaceView
 import android.view.Window
 import android.widget.Toast
+import kotlin.math.roundToInt
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -25,6 +27,7 @@ import org.opencv.objdetect.Objdetect
 import org.opencv.objdetect.DetectorParameters
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
 import java.io.File
 import kotlin.math.pow
@@ -50,7 +53,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     //Boolean check to see if we are currently calibrating
     var isProcessingCalibration = false
     //Chessboard Square size (mine printed out to ~22mm per square
-    val calibSquareSize = .024 //22MM
+    val calibSquareSize = .022 //22MM
     //Amount of frames to take when we calibrate, 20-30 if good practice for calibration
     val requiredFrames = 30
     //The size of the chessboard, mine is 10x7 squares, which means its a 9x6 chessboard
@@ -398,16 +401,16 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                             //then take the square root of each value squared and summed,
                             //multiplied to convert to inches,and add 2 inches to account for marker size
                             val markerDistance = (sqrt(dx*dx + dy*dy + dz*dz) * 39.37) + 2//add marker size
-                            val rounded = kotlin.math.round(markerDistance * 16) / 16 //round to the nearest 16th of an inch
+                            val rounded = kotlin.math.round(markerDistance * 32) / 32 //round to the nearest 32nd of an inch
 
 
 
 
                             if((id1 == 0 && id2 == 1) || (id1 == 1 && id2 == 0)) {
-                                //Display the measurement results to the 16th, or 4 decimal places
+                                //Display the measurement results to the 32nd, or 4 decimal places
                                 Imgproc.putText(
                                     rgba,
-                                    "Height: %.2f in".format(rounded),
+                                    "Height: ${decimalTo32nds(rounded)}",
                                     Point(50.0, 50.0 + (30.0 * lineIndex)),
                                     Imgproc.FONT_HERSHEY_SIMPLEX,
                                     0.8,
@@ -416,12 +419,12 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                                 )
 
                                 // 0-1 measurement write
-                                idHeight = rounded
+                                idHeight = "%.4f".format(rounded).toDouble()
                             } else if ((id1 == 1 && id2 == 2) || (id1 == 2 && id2 == 1)) {
-                                //Display the measurement results to the 16th, or 4 decimal places
+                                //Display the measurement results to the 32nd, or 4 decimal places
                                 Imgproc.putText(
                                     rgba,
-                                    "Width: %.2f in".format(rounded),
+                                    "Width: ${decimalTo32nds(rounded)}",
                                     Point(50.0, 50.0 + (30.0 * lineIndex)),
                                     Imgproc.FONT_HERSHEY_SIMPLEX,
                                     0.8,
@@ -429,7 +432,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                                     2
                                 )
                                 //1-2 check
-                                idWidth = rounded
+
+                                idWidth = "%.4f".format(rounded).toDouble()
                             }
 
 
@@ -616,8 +620,23 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
      * @param[idHeight] Our 1-2 distance measurement
      */
     fun captureMeasurement(idWidth: Double, idHeight: Double) {
+
+        //Create a layout for both entries
+        val layout = LinearLayout(this)
+        layout.orientation = LinearLayout.VERTICAL
+
+        //Name text entry
         val textEntry = EditText(this)
         textEntry.hint = "Enter Window Name.."
+
+        //Amount text entry
+        val intEntry = EditText(this)
+        intEntry.inputType = InputType.TYPE_CLASS_NUMBER
+        intEntry.hint = "Enter Window Amount Number.."
+
+
+        layout.addView(textEntry)
+        layout.addView(intEntry)
 
         val builder: AlertDialog.Builder = AlertDialog.Builder(this)
         builder
@@ -625,16 +644,29 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             .setMessage("The following measurement data will be saved: \n" +
                     "Width: $idWidth\n" +
                     "Height: $idHeight\n")
-            .setView(textEntry)
+            .setView(layout)
             .setPositiveButton("Confirm") { dialog, which ->
                 val name = textEntry.text.toString()
+                val amtEntry = intEntry.text.toString()
 
-                val windowData = WindowData(name, idWidth, idHeight)
+                if (name.isEmpty() && amtEntry.isEmpty()) {
+                    Toast.makeText(this,"Measurement name and amount required.", Toast.LENGTH_LONG).show()
+                }
+                else if (name.isEmpty()) {
+                    Toast.makeText(this,"Measurement name required.", Toast.LENGTH_LONG).show()
+                }
+                else if (amtEntry.isEmpty()) {
+                    Toast.makeText(this,"Window amount required.", Toast.LENGTH_LONG).show()
+                }
+                else {
+                    val amount = amtEntry.toInt()
+                    val windowData = WindowData(name, idWidth, idHeight, amount)
+                    val measurementName = windowData.name
+                    val measurementCsv : String = CsvUtils.formatCsvString(windowData)
 
-                val measurementName = windowData.name
-                val measurementCsv : String = CsvUtils.formatCsvString(windowData)
+                    saveMeasurementData(measurementCsv, measurementName)
+                }
 
-                saveMeasurementData(measurementCsv, measurementName)
 
             }
             .setNegativeButton("Cancel") { dialog, which ->
@@ -659,7 +691,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         //Link to the measurements csv file, if not created then create one and write the header
         val csvFile = File(this.filesDir, "measurements.csv")
         if(!csvFile.exists()) {
-            csvFile.writeText("name,width,height\n")
+            csvFile.writeText("name,width,height,amount\n")
         }
 
         csvFile.appendText(measurement)
@@ -667,6 +699,20 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             Toast.makeText(this,"Measurement '${name}' saved!", Toast.LENGTH_LONG).show()
         }
 
+    }
+
+    fun decimalTo32nds(inches: Double) : String {
+        val wholeInches = inches.toInt()
+        val remainder = inches - wholeInches
+        val thirtySeconds = (remainder * 32).roundToInt()
+
+        return if (thirtySeconds == 0) {
+            "$wholeInches\""
+        } else if (thirtySeconds == 32) {
+            "${wholeInches + 1}\""
+        } else {
+            "$wholeInches $thirtySeconds/32\""
+        }
     }
 
 
@@ -698,6 +744,7 @@ data class CalibrationData(
 data class WindowData(
     val name : String,
     val width : Double,
-    val height : Double
+    val height : Double,
+    val amount : Int
 )
 

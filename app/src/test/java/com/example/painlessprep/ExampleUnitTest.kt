@@ -24,9 +24,9 @@ class ExampleUnitTest {
 class PanePerfectTest {
     @Test
     fun testCsvFormatting() {
-        val data : WindowData = WindowData("Kitchen Wall",12.5,22.6)
+        val data : WindowData = WindowData("Kitchen Wall",12.5,22.6,15)
 
         val formattedString = CsvUtils.formatCsvString(data)
-        assertEquals("Kitchen Wall,12.5,22.6\n", formattedString)
+        assertEquals("Kitchen Wall,12.5,22.6,15\n", formattedString)
     }
 }
