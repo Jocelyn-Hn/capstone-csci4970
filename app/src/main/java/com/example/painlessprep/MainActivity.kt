@@ -23,6 +23,7 @@ import org.opencv.objdetect.ArucoDetector
 import org.opencv.objdetect.Dictionary
 import org.opencv.objdetect.Objdetect
 import org.opencv.objdetect.DetectorParameters
+import android.widget.ImageButton
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -127,7 +128,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             captureMeasurement(idWidth,idHeight)
         }
 
-        val btnInfocard = findViewById<Button>(R.id.btn_infocard)
+        val btnInfocard = findViewById<ImageButton>(R.id.btn_infocard)
         btnInfocard.setOnClickListener {
             showInfoCard()
         }

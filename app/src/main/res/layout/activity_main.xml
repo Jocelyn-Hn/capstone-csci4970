@@ -59,17 +59,32 @@
             android:layout_gravity="right"
              />
 
-        <Button
+<!--        <Button-->
+<!--            android:id="@+id/btn_infocard"-->
+<!--            android:layout_width="42dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="left"-->
+<!--            android:layout_marginTop="100dp"-->
+<!--            android:layout_marginStart="16dp"-->
+<!--            android:padding="8dp"-->
+<!--            android:text="i"-->
+<!--            android:textSize="16sp" />-->
+
+        <ImageButton
             android:id="@+id/btn_infocard"
-            android:layout_width="42dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginTop="100dp"
             android:layout_marginStart="16dp"
-            android:padding="8dp"
-            android:text="i"
-            android:textSize="16sp" />
-        />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_dialog_info"
+            android:contentDescription="@string/info_button_desc"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+<!--        strings.xml        -->
+<!--        <string name="info_button_desc">Information</string>-->
+
 
 
     </FrameLayout>
