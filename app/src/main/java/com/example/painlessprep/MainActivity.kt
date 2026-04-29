@@ -602,6 +602,12 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
 
     }
+    /**
+     * Converts the window measurement value from decimal format to 32nds of an inch for display.
+     *
+     * @param[inches] a Double holding the measured distance of two of the aruco markers, to be converted
+     * @return[wholeInches] an integer value holding the amount of 32nds of an inch the window is calculated at.
+     */
     fun decimalTo32nds(inches: Double): String {
         val wholeInches = inches.toInt()
         val remainder = inches - wholeInches
