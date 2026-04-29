@@ -43,6 +43,9 @@
                 android:layout_marginEnd="16dp"
                 android:maxLines="1"
                 android:text="Capture" />
+
+
+
         </LinearLayout>
 
         <TextView
@@ -56,7 +59,17 @@
             android:layout_gravity="right"
              />
 
-
+        <ImageButton
+            android:id="@+id/btn_infocard"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="100dp"
+            android:layout_marginStart="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_dialog_info"
+            android:contentDescription="@string/info_button_desc"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </FrameLayout>
 

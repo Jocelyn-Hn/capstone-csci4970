@@ -23,6 +23,7 @@ import org.opencv.objdetect.ArucoDetector
 import org.opencv.objdetect.Dictionary
 import org.opencv.objdetect.Objdetect
 import org.opencv.objdetect.DetectorParameters
+import android.widget.ImageButton
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -126,6 +127,12 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         btnCapture.setOnClickListener {
             captureMeasurement(idWidth,idHeight)
         }
+
+        val btnInfocard = findViewById<ImageButton>(R.id.btn_infocard)
+        btnInfocard.setOnClickListener {
+            showInfoCard()
+        }
+
     }
 
     override fun onResume() {
@@ -532,6 +539,51 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     }
 
     /**
+     * Displays usage information
+     *
+     */
+
+    fun showInfoCard() {
+        val builder = AlertDialog.Builder(this)
+
+        builder
+            .setTitle("Using The App")
+            .setMessage(
+                "Here is a step by step guide " +
+                "in using the application.\n\n" +
+                "Step 1) Calibrate your mobile " +
+                "camera by placing the provided " +
+                "chessboard in the frame. " +
+                "Then, hit the calibration button " +
+                "and move your phone around. " +
+                "(If prompted, you may need to " +
+                "allow camera permissions.) " +
+                "Try to capture as many angles as " +
+                "possible during calibration.\n\n"  +
+                "Step 2) Now that your camera " +
+                "is calibrated, place the provided " +
+                "ArUco markers in 3 corners of the " +
+                "window you would like to measure.\n\n" +
+                "Step 3) After placing the ArUco " +
+                "markers, position yourself in front " +
+                "of the window and ensure the window " +
+                "is filling the camera view on the app.\n\n" +
+                "Step 4) Once the height and width " +
+                "are calculated, hit the Capture button " +
+                "to capture the measurements.\n\n" +
+                "Step 5) Input the room information " +
+                "and hit Confirm to save your " +
+                "measurements."
+            )
+            .setPositiveButton("Got it!") {dialog, _ ->
+                dialog.dismiss()
+
+            }
+
+        builder.create().show()
+    }
+
+    /**
      * Updates the RMS error display value
      *
      * @param[rms] A double representing the RMS error returned when calibrating.
@@ -545,6 +597,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
 
     }
+
+
 
     /**
      * Allows the user to capture measurement data to then export to csv.
