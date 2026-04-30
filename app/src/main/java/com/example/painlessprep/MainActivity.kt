@@ -689,10 +689,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
      */
     fun saveMeasurementData(measurement : String, name : String) {
         //Link to the measurements csv file, if not created then create one and write the header
-        val csvFile = File(this.filesDir, "measurements.csv")
-        if(!csvFile.exists()) {
-            csvFile.writeText("name,width,height,amount\n")
-        }
+        val csvFile = CsvUtils.checkCsv("measurements", this)
 
         csvFile.appendText(measurement)
         runOnUiThread {
