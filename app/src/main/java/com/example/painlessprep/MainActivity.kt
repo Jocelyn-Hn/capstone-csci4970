@@ -3,9 +3,11 @@ package com.example.painlessprep
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.InputType
 import android.view.SurfaceView
 import android.view.Window
 import android.widget.Toast
+import kotlin.math.roundToInt
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -26,14 +28,19 @@ import org.opencv.objdetect.DetectorParameters
 import android.widget.ImageButton
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
 import java.io.File
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
+import com.example.painlessprep.CsvUtils
 
 
 // Main activity implements OpenCV camera
+/**
+ * The main class of Pane Perfect, contains all functions used in the application.
+ */
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
 
@@ -48,7 +55,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     //Boolean check to see if we are currently calibrating
     var isProcessingCalibration = false
     //Chessboard Square size (mine printed out to ~22mm per square
-    val calibSquareSize = .024 //22MM
+    val calibSquareSize = .022 //22MM
     //Amount of frames to take when we calibrate, 20-30 if good practice for calibration
     val requiredFrames = 30
     //The size of the chessboard, mine is 10x7 squares, which means its a 9x6 chessboard
@@ -66,11 +73,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     var idWidth : Double = 0.0 //1 to 2 distance
 
 
-
-
-
-
-
+    /**
+     * The function called on the initial load of the application.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -135,6 +140,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     }
 
+    /**
+     * The function called when focusing back onto the application from an unfocused view.
+     */
     override fun onResume() {
         super.onResume()
 
@@ -147,6 +155,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
     }
 
+    /**
+     * The function called when un-focusing from view. (Tabbing out)
+     */
     override fun onPause() {
         super.onPause()
 
@@ -154,6 +165,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         cameraView.disableView()
     }
 
+    /**
+     * Function called to kill the application properly.
+     */
     override fun onDestroy() {
         super.onDestroy()
 
@@ -161,6 +175,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         cameraView.disableView()
     }
 
+    /**
+     * Function called to handle the permission request popup.
+     */
     // Handle result of permission request
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -179,6 +196,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
     }
 
+
     // Called when camera starts
     override fun onCameraViewStarted(width: Int, height: Int) {
     }
@@ -188,12 +206,26 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         // Cleanup resources here
     }
 
+
+    /**
+     * Main function called every "frame", essentially called ~30 times per second.
+     * This function is also where we check if we are calibrating, or writing aruco data to the screen.
+     *
+     * @param[inputFrame] The given frame returned by the OpenCV camera view.
+     *
+     * @return An OpenCV matrix consisting of the camera frame data.
+     */
     // Called for every camera frame
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
         val rgba = inputFrame.rgba()
         val gray = inputFrame.gray()
         var cameraMatrix: Mat? = null
         var distortionCoeffs: Mat? = null
+        var id01 = 0.0
+        var id12 = 0.0
+
+
+
 
         if(savedCalibration != null) {
             val (cMat, dCoeffs) = savedCalibration!!
@@ -284,6 +316,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                     val imagePoints = MatOfPoint2f(pts)
 
                     //Now we need to define our known marker sizes for proper estimation
+                    //2inch = 0.05
+                    //2.5inch = 0.064
+                    //3inch = 0.076
                     val markerSize = 0.05 //2inch converted to meters
                     //now for our objectPoints matrix, this contains the markers coordinates to be changed
 
@@ -356,6 +391,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                 if(distortionCoeffs != null) {
                     var lineIndex = 0
 
+
                     for (i in 0 until markerTvecs.size) {
                         for (j in i + 1 until markerTvecs.size) {
 
@@ -373,26 +409,39 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                             //then take the square root of each value squared and summed,
                             //multiplied to convert to inches,and add 2 inches to account for marker size
                             val markerDistance = (sqrt(dx*dx + dy*dy + dz*dz) * 39.37) + 2//add marker size
-                            val rounded = kotlin.math.round(markerDistance * 32) / 32 //round to the nearest 16th of an inch
+                            val rounded = kotlin.math.round(markerDistance * 32) / 32 //round to the nearest 32nd of an inch
 
 
-                            //Display the measurement results to the 32nd, or 4 decimal places
-                            Imgproc.putText(
-                                rgba,
-                                "Distance $id1 - $id2: ${decimalTo32nds(rounded)}",
-                                Point(50.0, 50.0 + (30.0 * lineIndex)),
-                                Imgproc.FONT_HERSHEY_SIMPLEX,
-                                0.8,
-                                Scalar(0.0, 0.0, 255.0),
-                                2
-                            )
+
 
                             if((id1 == 0 && id2 == 1) || (id1 == 1 && id2 == 0)) {
+                                //Display the measurement results to the 32nd, or 4 decimal places
+                                Imgproc.putText(
+                                    rgba,
+                                    "Height: ${decimalTo32nds(rounded)}",
+                                    Point(50.0, 50.0 + (30.0 * lineIndex)),
+                                    Imgproc.FONT_HERSHEY_SIMPLEX,
+                                    0.8,
+                                    Scalar(5.0, 252.0, 244.0),
+                                    2
+                                )
+
                                 // 0-1 measurement write
-                                idHeight = rounded
+                                idHeight = "%.4f".format(rounded).toDouble()
                             } else if ((id1 == 1 && id2 == 2) || (id1 == 2 && id2 == 1)) {
+                                //Display the measurement results to the 32nd, or 4 decimal places
+                                Imgproc.putText(
+                                    rgba,
+                                    "Width: ${decimalTo32nds(rounded)}",
+                                    Point(50.0, 50.0 + (30.0 * lineIndex)),
+                                    Imgproc.FONT_HERSHEY_SIMPLEX,
+                                    0.8,
+                                    Scalar(5.0, 252.0, 244.0),
+                                    2
+                                )
                                 //1-2 check
-                                idWidth = rounded
+
+                                idWidth = "%.4f".format(rounded).toDouble()
                             }
 
 
@@ -412,6 +461,12 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return rgba
     }
 
+
+    /**
+     * The function that performs camera calibration
+     *
+     * @param[imageSize] An OpenCV size object, representing the image width and height
+     */
     //Function that actually runs the calibration
     fun runCalibration(imageSize : Size) {
 
@@ -449,8 +504,16 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         isProcessingCalibration = false
     }
 
+
+    /**
+     * The function that saves a cameras calibration data to a devices storage for later use.
+     *
+     * @param[cameraMatrix] An OpenCV matrix for storing the camera data to.
+     * @param[distortionCoeffs] An OpenCV matrix for storing the camera distortion coefficients to.
+     * @param[rms] A double to store the calibration error value to.
+     */
     //Function to save calibration data
-    fun saveCalibration(cameraMatrix: Mat, distanceCoeffs: Mat, rms: Double ) {
+    fun saveCalibration(cameraMatrix: Mat, distortionCoeffs: Mat, rms: Double ) {
         //grab our current preference data
         val prefs = getSharedPreferences("CameraPrefs", MODE_PRIVATE)
 
@@ -459,8 +522,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         cameraMatrix.get(0,0, cameraArray)
 
         //fill distArray with our distance coeffecients
-        val distArray = DoubleArray(distanceCoeffs.total().toInt())
-        distanceCoeffs.get(0,0,distArray)
+        val distArray = DoubleArray(distortionCoeffs.total().toInt())
+        distortionCoeffs.get(0,0,distArray)
 
         val rmsVal = rms
 
@@ -474,6 +537,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         prefs.edit().putString("calibration", json.toString()).apply()
     }
 
+    /**
+     * The fucntion utilized to load calibration data on application opening.
+     *
+     * @return A nullable CalibrationData data object storing the loaded json data.
+     */
     fun loadCalibration(): CalibrationData? {
         //dig into the preferences and grab our calibration preferences
         val prefs = getSharedPreferences("CameraPrefs", MODE_PRIVATE)
@@ -596,6 +664,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             textView.text = formattedText
         }
 
+
     }
 
 
@@ -606,9 +675,23 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
      * @param[idHeight] Our 1-2 distance measurement
      */
     fun captureMeasurement(idWidth: Double, idHeight: Double) {
+
+        //Create a layout for both entries
+        val layout = LinearLayout(this)
+        layout.orientation = LinearLayout.VERTICAL
+
+        //Name text entry
         val textEntry = EditText(this)
         textEntry.hint = "Enter Window Name.."
 
+        //Amount text entry
+        val intEntry = EditText(this)
+        intEntry.inputType = InputType.TYPE_CLASS_NUMBER
+        intEntry.hint = "Enter Window Amount Number.."
+
+
+        layout.addView(textEntry)
+        layout.addView(intEntry)
 
         val builder: AlertDialog.Builder = AlertDialog.Builder(this)
         builder
@@ -617,13 +700,29 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             .setMessage("The following measurement data will be saved: \n" +
                     "Width: $idWidth\n" +
                     "Height: $idHeight\n")
-            .setView(textEntry)
+            .setView(layout)
             .setPositiveButton("Confirm") { dialog, which ->
                 val name = textEntry.text.toString()
+                val amtEntry = intEntry.text.toString()
 
-                val windowData = WindowData(name, idWidth, idHeight)
+                if (name.isEmpty() && amtEntry.isEmpty()) {
+                    Toast.makeText(this,"Measurement name and amount required.", Toast.LENGTH_LONG).show()
+                }
+                else if (name.isEmpty()) {
+                    Toast.makeText(this,"Measurement name required.", Toast.LENGTH_LONG).show()
+                }
+                else if (amtEntry.isEmpty()) {
+                    Toast.makeText(this,"Window amount required.", Toast.LENGTH_LONG).show()
+                }
+                else {
+                    val amount = amtEntry.toInt()
+                    val windowData = WindowData(name, idWidth, idHeight, amount)
+                    val measurementName = windowData.name
+                    val measurementCsv : String = CsvUtils.formatCsvString(windowData)
 
-                saveMeasurementData(windowData)
+                    saveMeasurementData(measurementCsv, measurementName)
+                }
+
 
             }
             .setNegativeButton("Cancel") { dialog, which ->
@@ -641,18 +740,16 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     /**
      * Allows saving of measurement data to a "measurements.csv" file
      *
-     * @param[measurement] a WindowData object that holds the measurement name, width, and height
+     * @param[measurement] The measurement string formatted for csv writing.
+     * @param[name] The measurement name as returned from the WindowData class.
      */
-    fun saveMeasurementData(measurement : WindowData) {
+    fun saveMeasurementData(measurement : String, name : String) {
         //Link to the measurements csv file, if not created then create one and write the header
-        val csvFile = File(this.filesDir, "measurements.csv")
-        if(!csvFile.exists()) {
-            csvFile.writeText("name,width,height\n")
-        }
+        val csvFile = CsvUtils.checkCsv("measurements", this)
 
-        csvFile.appendText("${measurement.name},${measurement.width},${measurement.height}\n")
+        csvFile.appendText(measurement)
         runOnUiThread {
-            Toast.makeText(this,"Measurement '${measurement.name}' saved!", Toast.LENGTH_LONG).show()
+            Toast.makeText(this,"Measurement '${name}' saved!", Toast.LENGTH_LONG).show()
         }
 
     }
@@ -675,6 +772,22 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             "$wholeInches $thirtySeconds/32\""
         }
     }
+
+    fun decimalTo32nds(inches: Double) : String {
+        val wholeInches = inches.toInt()
+        val remainder = inches - wholeInches
+        val thirtySeconds = (remainder * 32).roundToInt()
+
+        return if (thirtySeconds == 0) {
+            "$wholeInches\""
+        } else if (thirtySeconds == 32) {
+            "${wholeInches + 1}\""
+        } else {
+            "$wholeInches $thirtySeconds/32\""
+        }
+    }
+
+
 
 
 }
@@ -703,5 +816,7 @@ data class CalibrationData(
 data class WindowData(
     val name : String,
     val width : Double,
-    val height : Double
+    val height : Double,
+    val amount : Int
 )
+

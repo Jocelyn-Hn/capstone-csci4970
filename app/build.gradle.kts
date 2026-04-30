@@ -45,21 +45,35 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
-    implementation(project(":opencv"))
     implementation ("androidx.camera:camera-core:1.3.0")
     implementation ("androidx.camera:camera-camera2:1.3.0")
     implementation ("androidx.camera:camera-lifecycle:1.3.0")
     implementation ("androidx.camera:camera-view:1.3.0")
     implementation(libs.androidx.constraintlayout)
+    implementation(project(":opencv"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
 
-tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
-    dokkaSourceSets.configureEach {
-        includeNonPublic.set(true)
-        skipEmptyPackages.set(false)
-        reportUndocumented.set(false)
+tasks.dokkaHtml {
+    dokkaSourceSets {
+        configureEach {
+            documentedVisibilities.set(
+                setOf(org.jetbrains.dokka.DokkaConfiguration.Visibility.PUBLIC)
+            )
+            suppressInheritedMembers.set(true)
+            skipDeprecated.set(true)
+
+            perPackageOption {
+                matchingRegex.set(".*")
+                suppress.set(true)
+            }
+
+            perPackageOption {
+                matchingRegex.set("com\\.example\\.painlessprep\\..*")
+                suppress.set(false)
+            }
+        }
     }
 }
