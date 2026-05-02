@@ -773,19 +773,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
     }
 
-    fun decimalTo32nds(inches: Double) : String {
-        val wholeInches = inches.toInt()
-        val remainder = inches - wholeInches
-        val thirtySeconds = (remainder * 32).roundToInt()
 
-        return if (thirtySeconds == 0) {
-            "$wholeInches\""
-        } else if (thirtySeconds == 32) {
-            "${wholeInches + 1}\""
-        } else {
-            "$wholeInches $thirtySeconds/32\""
-        }
-    }
 
 
 

@@ -1,5 +1,5 @@
 {
-  "installationFolder": "C:\\Users\\katho\\AndroidStudioProjects\\capstone-csci4970\\opencv\\build\\intermediates\\prefab_package\\release\\prefab",
+  "installationFolder": "C:\\Users\\mario\\Desktop\\School stuff\\Capstone - Painless Prep\\Github\\capstone-csci4970\\opencv\\build\\intermediates\\prefab_package\\release\\prefab",
   "gradlePath": ":opencv",
   "packageInfo": {
     "packageName": "opencv",
@@ -8,7 +8,7 @@
     "modules": [
       {
         "moduleName": "opencv_jni_shared",
-        "moduleHeaders": "C:\\Users\\katho\\AndroidStudioProjects\\capstone-csci4970\\opencv\\native\\jni\\include",
+        "moduleHeaders": "C:\\Users\\mario\\Desktop\\School stuff\\Capstone - Painless Prep\\Github\\capstone-csci4970\\opencv\\native\\jni\\include",
         "moduleExportLibraries": [],
         "abis": []
       }
