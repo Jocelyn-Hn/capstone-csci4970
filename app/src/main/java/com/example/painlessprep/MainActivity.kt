@@ -221,8 +221,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         val gray = inputFrame.gray()
         var cameraMatrix: Mat? = null
         var distortionCoeffs: Mat? = null
-        var id01 = 0.0
-        var id12 = 0.0
+
 
 
 
